@@ -7,14 +7,6 @@
 
 import Foundation
 
-// 1. UPDATE STRUCT INI: Tambahkan 'headers'
-struct APIResponse {
-    let statusCode: Int
-    let latency: Double
-    let headers: [String: String] // <--- WAJIB DITAMBAH
-    let body: String
-}
-
 struct NetworkService {
     
     /// **Algorithm: Custom Session Configuration**

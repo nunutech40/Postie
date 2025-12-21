@@ -7,14 +7,6 @@
 
 import Foundation
 
-// 1. DEFINISIKAN STRUCT-NYA DI SINI
-struct RequestPreset: Codable {
-    let method: String
-    let url: String
-    let authToken: String
-    let rawHeaders: String
-    let requestBody: String
-}
 
 struct PresetService {
     
