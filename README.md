@@ -106,8 +106,8 @@ Postie tidak hanya fokus pada UI, tetapi juga fondasi logic yang kuat dan teruji
 
 ## 👨‍💻 Author
 
-**Rizka Fajar Nugraha (Nunu)**  
-*Lead Mobile Developer* yang percaya bahwa aplikasi hebat adalah aplikasi yang **cepat, stabil, dan tepat guna** — bukan yang paling banyak dependency.
+** Nunu Nugraha 
+*iOS Developer* yang percaya bahwa aplikasi hebat adalah aplikasi yang **cepat, stabil, dan tepat guna** — bukan yang paling banyak dependency.
 
 ---
 
