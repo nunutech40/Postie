@@ -11,6 +11,9 @@ import SwiftUI
 struct HomeView: View {
     @StateObject var viewModel = HomeViewModel()
     
+    // 1. STATE BUAT BUKA SETTINGS
+    @State private var showSettings = false
+    
     var body: some View {
         HStack(spacing: 0) {
             // 1. LEFT COLUMN: Configuration
@@ -24,10 +27,25 @@ struct HomeView: View {
             ResponsePanel(response: viewModel.response)
                 .background(Color(NSColor.controlBackgroundColor))
         }
+        // 2. TAMBAH TOOLBAR DI POJOK KANAN ATAS
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button(action: {
+                    showSettings = true
+                }) {
+                    Image(systemName: "gearshape.fill")
+                        .foregroundColor(.secondary)
+                }
+                .help("Settings & Guide") // Tooltip pas di hover mouse
+            }
+        }
+        // 3. SHEET PEMANGGIL SETTINGS
+        .sheet(isPresented: $showSettings) {
+            SettingsView()
+        }
     }
 }
 
-// MARK: - COMPONENT 1: LEFT SIDEBAR (Config)
 struct RequestSidebar: View {
     @ObservedObject var viewModel: HomeViewModel
     
@@ -230,6 +248,9 @@ struct ResponseHeaderView: View {
     let response: APIResponse
     
     var body: some View {
+        // 2. LATENCY BADGE
+        let latencyColor = LatencyEvaluator.evaluate(response.latency)
+        
         HStack {
             Text("RESPONSE")
                 .font(.headline)
@@ -246,14 +267,23 @@ struct ResponseHeaderView: View {
                 .foregroundColor(.white)
                 .cornerRadius(4)
             
-            // Latency Badge
             HStack(spacing: 4) {
                 Image(systemName: "clock")
                 Text("\(String(format: "%.0f", response.latency)) ms")
             }
             .font(.caption)
-            .foregroundColor(.secondary)
-            .padding(.leading, 8)
+            .fontWeight(.bold) // Biar tegas dikit
+            .padding(.horizontal, 8) // Padding isi badge
+            .padding(.vertical, 4)
+            .background(latencyColor.opacity(0.15)) // Warna Background (Tipis)
+            .foregroundColor(latencyColor)          // Warna Text/Icon (Tegas)
+            .cornerRadius(4)                        // Radius di kotak pembungkus (HStack)
+            .overlay(                               // Opsional: Border tipis biar tajam
+                RoundedRectangle(cornerRadius: 4)
+                    .stroke(latencyColor.opacity(0.5), lineWidth: 1)
+            )
+            .padding(.leading, 8) // Spasi dari elemen sebelah kirinya
+            
         }
         .padding()
         .background(Color(NSColor.windowBackgroundColor))
