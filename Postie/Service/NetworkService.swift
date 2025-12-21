@@ -17,50 +17,76 @@ struct APIResponse {
 
 struct NetworkService {
     
+    // 3. CUSTOM SESSION CONFIGURATION (Biar bisa set Timeout)
+    private static var customSession: URLSession {
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 30.0 // Timeout 30 detik
+        config.urlCache = nil // Fresh data terus, gak perlu cache
+        config.waitsForConnectivity = true // Tunggu koneksi kalo tiba-tiba ilang
+        return URLSession(configuration: config)
+    }
+    
     static func performRequest(url: String,
                                method: String,
                                headers: [String: String],
                                body: String?) async throws -> APIResponse {
         
-        guard let urlObj = URL(string: url) else {
-            throw NSError(domain: "Invalid URL", code: 0, userInfo: nil)
+        // Cek Validasi URL
+        guard let urlObj = URL(string: url.trimmingCharacters(in: .whitespacesAndNewlines)) else {
+            throw PostieError.invalidURL
         }
         
         var request = URLRequest(url: urlObj)
         request.httpMethod = method
         request.allHTTPHeaderFields = headers
         
-        if let bodyStr = body, !bodyStr.isEmpty, method != "GET" {
+        if let bodyStr = body, !bodyStr.isEmpty, ["POST", "PUT", "PATCH"].contains(method) {
             request.httpBody = bodyStr.data(using: .utf8)
         }
         
-        let startTime = Date()
-        let (data, response) = try await URLSession.shared.data(for: request)
-        let endTime = Date()
-        
-        let latencyMs = endTime.timeIntervalSince(startTime) * 1000
-        
-        // 2. LOGIC EXTRAKSI HEADERS
-        let httpResponse = response as? HTTPURLResponse
-        let statusCode = httpResponse?.statusCode ?? 0
-        
-        // Ubah format headers dari [AnyHashable: Any] jadi [String: String]
-        var responseHeaders = [String: String]()
-        httpResponse?.allHeaderFields.forEach { (key, value) in
-            if let k = key as? String, let v = value as? String {
-                responseHeaders[k] = v
+        do {
+            let startTime = Date()
+            // Pakai customSession bukan URLSession.shared
+            let (data, response) = try await customSession.data(for: request)
+            let endTime = Date()
+            
+            let latencyMs = endTime.timeIntervalSince(startTime) * 1000
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw PostieError.unknown("Respon bukan HTTP.")
             }
+            
+            // Ekstraksi Headers
+            var responseHeaders = [String: String]()
+            httpResponse.allHeaderFields.forEach { (key, value) in
+                if let k = key as? String, let v = value as? String {
+                    responseHeaders[k] = v
+                }
+            }
+            
+            let responseString = String(data: data, encoding: .utf8) ?? ""
+            let prettyBody = prettyPrintJSON(responseString)
+            
+            return APIResponse(
+                statusCode: httpResponse.statusCode,
+                latency: latencyMs,
+                headers: responseHeaders,
+                body: prettyBody
+            )
+            
+        } catch let error as URLError {
+            // MAPPING URLError ke PostieError
+            switch error.code {
+            case .timedOut:
+                throw PostieError.timeout
+            case .notConnectedToInternet, .networkConnectionLost:
+                throw PostieError.noInternet
+            default:
+                throw PostieError.unknown(error.localizedDescription)
+            }
+        } catch {
+            throw error
         }
-        
-        let responseString = String(data: data, encoding: .utf8) ?? ""
-        let prettyBody = prettyPrintJSON(responseString)
-        
-        return APIResponse(
-            statusCode: statusCode,
-            latency: latencyMs,
-            headers: responseHeaders, // <--- MASUKIN KESINI
-            body: prettyBody
-        )
     }
     
     static func prettyPrintJSON(_ jsonString: String) -> String {

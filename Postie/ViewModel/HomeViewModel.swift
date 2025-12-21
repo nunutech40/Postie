@@ -96,9 +96,8 @@ class HomeViewModel: ObservableObject {
         // 3. Suruh PresetService simpan ke disk
         do {
             try PresetService.save(preset: preset, to: url)
-            print("✅ Berhasil disimpan")
         } catch {
-            self.errorMessage = "Gagal menyimpan preset: \(error.localizedDescription)"
+            self.errorMessage = error.localizedDescription
         }
     }
     
@@ -117,9 +116,8 @@ class HomeViewModel: ObservableObject {
             self.authToken = preset.authToken
             self.rawHeaders = preset.rawHeaders
             self.requestBody = preset.requestBody
-            print("✅ Berhasil dimuat")
         } catch {
-            self.errorMessage = "Gagal memuat preset: \(error.localizedDescription)"
+            self.errorMessage = error.localizedDescription
         }
     }
 }
