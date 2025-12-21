@@ -101,6 +101,23 @@ struct GuideView: View {
                     .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.gray.opacity(0.2)))
                 }
                 
+                // ==========================================
+                // NEW SECTION: PRESETS (Save & Load)
+                // ==========================================
+                GuideSection(title: "Presets (Simpan & Buka)", icon: "tray.full.fill") {
+                    GuideRow(
+                        icon: "square.and.arrow.down",
+                        title: "Save Request",
+                        desc: "Simpan seluruh konfigurasi (Method, URL, Headers, dan Body) ke dalam file `.json`. Sangat berguna untuk mendokumentasikan API atau berbagi konfigurasi dengan tim."
+                    )
+                    
+                    GuideRow(
+                        icon: "folder",
+                        title: "Browse / Load Request",
+                        desc: "Membuka file preset yang sudah disimpan sebelumnya. Postie akan otomatis mengisi kembali semua kolom input sesuai dengan data di dalam file tersebut."
+                    )
+                }
+                
                 // Footer Space
                 Spacer().frame(height: 20)
             }
