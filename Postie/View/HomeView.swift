@@ -110,14 +110,16 @@ struct ResponsePanel: View {
     
     // Logic Penggabungan String
     private func generateMergedContent(from response: APIResponse) -> String {
-        // A. Format Headers jadi String (Key: Value)
-        let headersString = response.headers
-            .sorted(by: <) // Urutkan biar rapi
-            .map { "\($0.key): \($0.value)" }
-            .joined(separator: "\n")
-        
-        // B. Gabung: Headers + 2 Enter + Body
-        return headersString + "\n\n" + response.body
+        // Bungkus proses manipulasi String besar di sini
+        return autoreleasepool {
+            let headersString = response.headers
+                .sorted(by: <)
+                .map { "\($0.key): \($0.value)" }
+                .joined(separator: "\n")
+            
+            let finalContent = headersString + "\n\n" + response.body
+            return finalContent
+        }
     }
 }
 
@@ -379,17 +381,28 @@ struct ResponseHeaderView: View {
     }
 }
 
+//struct ResponseBodyView: View {
+//    let content: String
+//    
+//    var body: some View {
+//        ScrollView {
+//            Text(content)
+//                .font(.system(.body, design: .monospaced))
+//                .textSelection(.enabled)
+//                .frame(maxWidth: .infinity, alignment: .leading)
+//                .padding()
+//        }
+//    }
+//}
+
 struct ResponseBodyView: View {
     let content: String
     
     var body: some View {
-        ScrollView {
-            Text(content)
-                .font(.system(.body, design: .monospaced))
-                .textSelection(.enabled)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding()
-        }
+        // Ganti ScrollView + Text lama dengan ini:
+        NativeTextView(text: content)
+            .background(Color(NSColor.controlBackgroundColor))
+            // Gak perlu padding() di sini karena NSTextView udah punya margin internal
     }
 }
 

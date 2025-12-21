@@ -15,7 +15,7 @@ struct NetworkService {
     /// 2. `urlCache = nil`: Mematikan cache agar testing API selalu mendapatkan data terbaru dari server.
     /// 3. `waitsForConnectivity`: Menunda request jika koneksi hilang sementara, alih-alih langsung gagal.
     private static var customSession: URLSession {
-        let config = URLSessionConfiguration.default
+        let config = URLSessionConfiguration.ephemeral // tidak menyimpan cookies, cache, sertifikat ke hd
         config.timeoutIntervalForRequest = 30.0
         config.urlCache = nil
         config.waitsForConnectivity = true

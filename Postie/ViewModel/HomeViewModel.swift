@@ -37,7 +37,10 @@ class HomeViewModel: ObservableObject {
     func runRealRequest() -> Task<Void, Never> {
         self.isLoading = true
         self.errorMessage = nil
-        self.response = nil
+        // Paksa nil dan pastikan tidak ada referensi yang nyangkut
+        if self.response != nil {
+            self.response = nil
+        }
         
         return Task {
             do {
