@@ -244,13 +244,15 @@ struct SendButtonView: View {
 
 // MARK: - Response Components
 
+// MARK: - RESPONSE HEADER COMPONENT
+
 struct ResponseHeaderView: View {
     let response: APIResponse
     
+    // 👇 1. INI YANG TADI HILANG (Saklar buat Popover)
+    @State private var showDictionary = false
+    
     var body: some View {
-        // 2. LATENCY BADGE
-        let latencyColor = LatencyEvaluator.evaluate(response.latency)
-        
         HStack {
             Text("RESPONSE")
                 .font(.headline)
@@ -258,41 +260,81 @@ struct ResponseHeaderView: View {
             
             Spacer()
             
-            // Status Badge
-            Text("\(response.statusCode) CREATED")
-                .font(.caption).bold()
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(statusCodeColor(response.statusCode))
-                .foregroundColor(.white)
-                .cornerRadius(4)
+            // --- GRUP KANAN: STATUS CODE & LATENCY ---
+            
+            // A. BADGE STATUS CODE
+            HStack(spacing: 6) {
+                // Teks Status (Contoh: 200 OK)
+                Text("\(response.statusCode) \(getStatusCodeDescription(response.statusCode))")
+                    .font(.caption).bold()
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(statusCodeColor(response.statusCode))
+                    .foregroundColor(.white)
+                    .cornerRadius(4)
+                
+                // Tombol Info (Pentung) ℹ️
+                Button(action: {
+                    showDictionary = true // <--- Klik ini nyalain saklar
+                }) {
+                    Image(systemName: "info.circle")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+                .help("Lihat Kamus Error Code")
+                .popover(isPresented: $showDictionary) { // <--- Popover baca saklar ini
+                    ErrorCodesView() // Pastikan file ErrorCodesView.swift sudah dibuat
+                }
+            }
+            
+            // B. BADGE LATENCY (Warna-warni)
+            let latencyColor = LatencyEvaluator.evaluate(response.latency)
             
             HStack(spacing: 4) {
                 Image(systemName: "clock")
                 Text("\(String(format: "%.0f", response.latency)) ms")
             }
             .font(.caption)
-            .fontWeight(.bold) // Biar tegas dikit
-            .padding(.horizontal, 8) // Padding isi badge
+            .fontWeight(.bold)
+            .padding(.horizontal, 8)
             .padding(.vertical, 4)
-            .background(latencyColor.opacity(0.15)) // Warna Background (Tipis)
-            .foregroundColor(latencyColor)          // Warna Text/Icon (Tegas)
-            .cornerRadius(4)                        // Radius di kotak pembungkus (HStack)
-            .overlay(                               // Opsional: Border tipis biar tajam
+            .background(latencyColor.opacity(0.15))
+            .foregroundColor(latencyColor)
+            .cornerRadius(4)
+            .overlay(
                 RoundedRectangle(cornerRadius: 4)
                     .stroke(latencyColor.opacity(0.5), lineWidth: 1)
             )
-            .padding(.leading, 8) // Spasi dari elemen sebelah kirinya
-            
+            .padding(.leading, 8)
         }
         .padding()
         .background(Color(NSColor.windowBackgroundColor))
     }
     
+    // --- HELPER FUNCTIONS (Harus di dalam struct) ---
+    
     private func statusCodeColor(_ code: Int) -> Color {
         if code >= 200 && code < 300 { return .green }
-        if code >= 400 { return .red }
+        if code >= 400 && code < 500 { return .orange }
+        if code >= 500 { return .red }
         return .gray
+    }
+    
+    private func getStatusCodeDescription(_ code: Int) -> String {
+        switch code {
+        case 200: return "OK"
+        case 201: return "CREATED"
+        case 204: return "NO CONTENT"
+        case 400: return "BAD REQUEST"
+        case 401: return "UNAUTHORIZED"
+        case 403: return "FORBIDDEN"
+        case 404: return "NOT FOUND"
+        case 500: return "SERVER ERROR"
+        case 502: return "BAD GATEWAY"
+        case 503: return "UNAVAILABLE"
+        default: return ""
+        }
     }
 }
 

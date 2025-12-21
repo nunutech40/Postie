@@ -1,0 +1,163 @@
+
+[
+  {
+    "range": "1xx",
+    "title": "Informational",
+    "colorHex": "gray",
+    "items": [
+      {
+        "code": 100,
+        "title": "Continue",
+        "desc": "Bagian pertama request diterima, silakan lanjutkan kirim sisanya."
+      },
+      {
+        "code": 101,
+        "title": "Switching Protocols",
+        "desc": "Server setuju untuk mengganti protokol (misal: upgrade ke WebSocket)."
+      }
+    ]
+  },
+  {
+    "range": "2xx",
+    "title": "Success",
+    "colorHex": "green",
+    "items": [
+      {
+        "code": 200,
+        "title": "OK",
+        "desc": "Request sukses standar. Jawaban server ada di body."
+      },
+      {
+        "code": 201,
+        "title": "Created",
+        "desc": "Sukses. Resource baru berhasil dibuat (biasanya hasil POST/PUT)."
+      },
+      {
+        "code": 202,
+        "title": "Accepted",
+        "desc": "Request diterima untuk diproses, tapi belum selesai (Processing)."
+      },
+      {
+        "code": 204,
+        "title": "No Content",
+        "desc": "Sukses, tapi server sengaja tidak mengirimkan konten apa pun."
+      }
+    ]
+  },
+  {
+    "range": "3xx",
+    "title": "Redirection",
+    "colorHex": "blue",
+    "items": [
+      {
+        "code": 301,
+        "title": "Moved Permanently",
+        "desc": "Resource telah dipindah permanen ke URL baru."
+      },
+      {
+        "code": 302,
+        "title": "Found",
+        "desc": "Resource dipindah sementara ke URL lain."
+      },
+      {
+        "code": 304,
+        "title": "Not Modified",
+        "desc": "Resource tidak berubah sejak request terakhir (Menggunakan Cache)."
+      },
+      {
+        "code": 307,
+        "title": "Temporary Redirect",
+        "desc": "Redirect sementara, method request tidak boleh berubah."
+      }
+    ]
+  },
+  {
+    "range": "4xx",
+    "title": "Client Errors",
+    "colorHex": "orange",
+    "items": [
+      {
+        "code": 400,
+        "title": "Bad Request",
+        "desc": "Server tidak paham request Anda. Cek syntax JSON atau parameter."
+      },
+      {
+        "code": 401,
+        "title": "Unauthorized",
+        "desc": "Gagal autentikasi. Token tidak ada, salah, atau kadaluwarsa."
+      },
+      {
+        "code": 403,
+        "title": "Forbidden",
+        "desc": "Anda dikenali, tapi tidak punya hak akses ke resource ini."
+      },
+      {
+        "code": 404,
+        "title": "Not Found",
+        "desc": "URL Endpoint atau ID Resource tidak ditemukan di server."
+      },
+      {
+        "code": 405,
+        "title": "Method Not Allowed",
+        "desc": "HTTP Method dilarang (misal: Endpoint cuma terima GET, tapi Anda kirim POST)."
+      },
+      {
+        "code": 408,
+        "title": "Request Timeout",
+        "desc": "Server memutus koneksi karena request Anda terlalu lama dikirim."
+      },
+      {
+        "code": 409,
+        "title": "Conflict",
+        "desc": "Konflik data (misal: Email sudah terdaftar saat register)."
+      },
+      {
+        "code": 418,
+        "title": "I'm a teapot",
+        "desc": "Easter egg standar IETF. Server menolak menyeduh kopi karena dia teko teh."
+      },
+      {
+        "code": 422,
+        "title": "Unprocessable Entity",
+        "desc": "Validasi data gagal (misal: Password kurang panjang, format email salah)."
+      },
+      {
+        "code": 429,
+        "title": "Too Many Requests",
+        "desc": "Anda kena Rate Limit. Tunggu sebentar sebelum request lagi."
+      }
+    ]
+  },
+  {
+    "range": "5xx",
+    "title": "Server Errors",
+    "colorHex": "red",
+    "items": [
+      {
+        "code": 500,
+        "title": "Internal Server Error",
+        "desc": "Server error generik. Biasanya ada bug di kodingan backend."
+      },
+      {
+        "code": 501,
+        "title": "Not Implemented",
+        "desc": "Server tidak mengenali method request atau belum fiturnya belum dibuat."
+      },
+      {
+        "code": 502,
+        "title": "Bad Gateway",
+        "desc": "Server bertindak sebagai gateway dan menerima respon invalid dari upstream."
+      },
+      {
+        "code": 503,
+        "title": "Service Unavailable",
+        "desc": "Server overload atau sedang maintenance."
+      },
+      {
+        "code": 504,
+        "title": "Gateway Timeout",
+        "desc": "Server gateway tidak menerima respon tepat waktu dari server utama."
+      }
+    ]
+  }
+]
