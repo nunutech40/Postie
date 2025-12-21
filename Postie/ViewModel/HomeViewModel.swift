@@ -32,13 +32,14 @@ class HomeViewModel: ObservableObject {
     let methods = ["GET", "POST", "PUT", "DELETE", "PATCH"]
     
     // --- MAIN ACTION: SEND REAL REQUEST ---
+    @discardableResult
     @MainActor
-    func runRealRequest() {
+    func runRealRequest() -> Task<Void, Never> {
         self.isLoading = true
         self.errorMessage = nil
         self.response = nil
         
-        Task {
+        return Task {
             do {
                 var headers = parseHeaders(rawText: rawHeaders)
                 if !authToken.isEmpty {
@@ -62,7 +63,7 @@ class HomeViewModel: ObservableObject {
     }
     
     // --- HELPER LOGIC ---
-    private func parseHeaders(rawText: String) -> [String: String] {
+    func parseHeaders(rawText: String) -> [String: String] {
         var dict = [String: String]()
         let lines = rawText.split(separator: "\n")
         

@@ -72,10 +72,13 @@ struct RequestSidebar: View {
                 .padding()
             }
             
-            // Sticky Bottom Button
+            // Di dalam RequestSidebar (HomeView.swift)
             SendButtonView(
-                action: viewModel.runRealRequest,
-                isLoading: viewModel.isLoading // Oper status loading
+                action: {
+                    // Panggil fungsi secara eksplisit di dalam closure
+                    viewModel.runRealRequest()
+                },
+                isLoading: viewModel.isLoading
             )
         }
     }
