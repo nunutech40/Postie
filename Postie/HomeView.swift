@@ -43,6 +43,16 @@ struct HomeView: View {
         .sheet(isPresented: $showSettings) {
             SettingsView()
         }
+        .alert("Error", isPresented: Binding(
+            get: { viewModel.errorMessage != nil },
+            set: { _ in viewModel.errorMessage = nil }
+        )) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            if let msg = viewModel.errorMessage {
+                Text(msg)
+            }
+        }
     }
 }
 
@@ -113,18 +123,48 @@ struct ResponsePanel: View {
 // ==========================================
 
 // MARK: - Sidebar Components
-
 struct TargetSectionView: View {
     @ObservedObject var viewModel: HomeViewModel
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            SectionHeader(title: "TARGET")
             
-            // Method Picker & URL Input Wrapper
+            // --- HEADER DENGAN ICON YANG LURUS & PRO ---
+            HStack(alignment: .center) { // Kunci 1: Center alignment
+                SectionHeader(title: "TARGET")
+                    // Kunci 2: Pastikan teks tidak punya padding bawah liar
+                    .frame(maxHeight: .infinity)
+                
+                Spacer()
+                
+                // Group Tombol dengan frame yang konsisten
+                HStack(spacing: 14) {
+                    Button(action: { viewModel.loadPreset() }) {
+                        Image(systemName: "folder")
+                            .font(.system(size: 13, weight: .medium))
+                            .frame(width: 18, height: 18) // Kunci 3: Frame kotak untuk icon
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundColor(.secondary)
+                    .help("Load Request (.json)")
+                    
+                    Button(action: { viewModel.savePreset() }) {
+                        Image(systemName: "square.and.arrow.down")
+                            .font(.system(size: 13, weight: .medium))
+                            .frame(width: 18, height: 18) // Frame kotak agar lurus
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundColor(.secondary)
+                    .help("Save Request (.json)")
+                }
+            }
+            // Kunci 4: Berikan tinggi tetap pada baris header agar sinkron
+            .frame(height: 20)
+            .padding(.bottom, 4)
+            
+            // --- METHOD & URL INPUT ---
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    // Method Picker (Compact)
                     Picker("", selection: $viewModel.selectedMethod) {
                         ForEach(viewModel.methods, id: \.self) { m in Text(m) }
                     }
@@ -135,7 +175,6 @@ struct TargetSectionView: View {
                     Spacer()
                 }
                 
-                // Multi-line URL Editor
                 TextEditor(text: $viewModel.urlString)
                     .font(.system(.body, design: .monospaced))
                     .frame(height: 50)
@@ -249,7 +288,6 @@ struct SendButtonView: View {
 struct ResponseHeaderView: View {
     let response: APIResponse
     
-    // 👇 1. INI YANG TADI HILANG (Saklar buat Popover)
     @State private var showDictionary = false
     
     var body: some View {

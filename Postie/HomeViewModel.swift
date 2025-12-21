@@ -7,6 +7,7 @@
 
 import Combine
 import Foundation
+import SwiftUI // Pake SwiftUI aja buat ObservableObject
 
 class HomeViewModel: ObservableObject {
     
@@ -25,13 +26,13 @@ class HomeViewModel: ObservableObject {
     
     // --- OUTPUTS ---
     @Published var response: APIResponse?
-    @Published var isLoading = false      // Tambahan: Buat indikator loading
-    @Published var errorMessage: String?  // Tambahan: Buat nampilin error alert
+    @Published var isLoading = false
+    @Published var errorMessage: String?
     
     let methods = ["GET", "POST", "PUT", "DELETE", "PATCH"]
     
     // --- MAIN ACTION: SEND REAL REQUEST ---
-    @MainActor // Wajib: Biar update UI terjadi di Main Thread
+    @MainActor
     func runRealRequest() {
         self.isLoading = true
         self.errorMessage = nil
@@ -39,16 +40,11 @@ class HomeViewModel: ObservableObject {
         
         Task {
             do {
-                // 1. Siapin Headers (Parsing dari TextEditor)
                 var headers = parseHeaders(rawText: rawHeaders)
-                
-                // Inject Token otomatis kalo diisi user
                 if !authToken.isEmpty {
                     headers["Authorization"] = "Bearer \(authToken)"
                 }
                 
-                // 2. Panggil NetworkService (The Engine)
-                // Kita pake 'await' karena ini butuh waktu (async)
                 let result = try await NetworkService.performRequest(
                     url: urlString,
                     method: selectedMethod,
@@ -56,12 +52,9 @@ class HomeViewModel: ObservableObject {
                     body: requestBody
                 )
                 
-                // 3. Sukses! Update UI
                 self.response = result
                 self.isLoading = false
-                
             } catch {
-                // 4. Gagal (Misal internet mati / URL ngawur)
                 self.errorMessage = error.localizedDescription
                 self.isLoading = false
             }
@@ -69,14 +62,11 @@ class HomeViewModel: ObservableObject {
     }
     
     // --- HELPER LOGIC ---
-    
-    // Ubah text "Key: Value" jadi Dictionary ["Key": "Value"]
     private func parseHeaders(rawText: String) -> [String: String] {
         var dict = [String: String]()
         let lines = rawText.split(separator: "\n")
         
         for line in lines {
-            // Split cuma di titik dua pertama
             let parts = line.split(separator: ":", maxSplits: 1)
             if parts.count == 2 {
                 let key = parts[0].trimmingCharacters(in: .whitespaces)
@@ -85,5 +75,51 @@ class HomeViewModel: ObservableObject {
             }
         }
         return dict
+    }
+    
+    // --- CLEAN PRESET LOGIC ---
+    
+    @MainActor
+    func savePreset() {
+        // 1. Minta URL ke spesialis jendela (FileService)
+        guard let url = FileService.getSaveURL() else { return }
+        
+        // 2. Bungkus data
+        let preset = RequestPreset(
+            method: self.selectedMethod,
+            url: self.urlString,
+            authToken: self.authToken,
+            rawHeaders: self.rawHeaders,
+            requestBody: self.requestBody
+        )
+        
+        // 3. Suruh PresetService simpan ke disk
+        do {
+            try PresetService.save(preset: preset, to: url)
+            print("✅ Berhasil disimpan")
+        } catch {
+            self.errorMessage = "Gagal menyimpan preset: \(error.localizedDescription)"
+        }
+    }
+    
+    @MainActor
+    func loadPreset() {
+        // 1. Minta URL ke spesialis jendela (FileService)
+        guard let url = FileService.getOpenURL() else { return }
+        
+        // 2. Suruh PresetService baca data
+        do {
+            let preset = try PresetService.load(from: url)
+            
+            // 3. Update State (UI otomatis berubah)
+            self.selectedMethod = preset.method
+            self.urlString = preset.url
+            self.authToken = preset.authToken
+            self.rawHeaders = preset.rawHeaders
+            self.requestBody = preset.requestBody
+            print("✅ Berhasil dimuat")
+        } catch {
+            self.errorMessage = "Gagal memuat preset: \(error.localizedDescription)"
+        }
     }
 }
