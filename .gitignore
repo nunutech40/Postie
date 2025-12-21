@@ -1,0 +1,41 @@
+# --- macOS ---
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# --- Xcode ---
+# User settings (jendela xcode kebuka dimana, breakpoint, dll)
+*.mode1v3
+*.mode2v3
+*.ja
+!*.ja
+*.pbxuser
+*.perspectivev3
+xcuserdata/
+
+# Build artifacts (Sampah build yang bikin bengkak)
+build/
+DerivedData/
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+# Swift Package Manager (Kalau pake SPM)
+.build/
+Packages/
+# Package.resolved <-- INI JANGAN DI IGNORE (ini penting buat lock version)
+
+# CocoaPods (Jaga-jaga kalau nanti pake)
+# Pods/
+# Podfile.lock <-- INI JUGA JANGAN DI IGNORE
+
+# --- Project Specific ---
+# File temporary Xcode yang suka berubah tiap detik
+*/UserInterfaceState.xcuserstate
+*/Breakpoints_v2.xcbkptlist
+*.moved-aside
