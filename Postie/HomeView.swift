@@ -1,0 +1,306 @@
+//
+//  HomeView.swift
+//  Postie
+//
+//  Created by Nunu Nugraha on 21/12/25.
+//
+
+import SwiftUI
+
+// MARK: - MAIN VIEW (The Container)
+struct HomeView: View {
+    @StateObject var viewModel = HomeViewModel()
+    
+    var body: some View {
+        HStack(spacing: 0) {
+            // 1. LEFT COLUMN: Configuration
+            RequestSidebar(viewModel: viewModel)
+                .frame(width: 400)
+                .background(Color(NSColor.windowBackgroundColor))
+            
+            Divider()
+            
+            // 2. RIGHT COLUMN: Result
+            ResponsePanel(response: viewModel.response)
+                .background(Color(NSColor.controlBackgroundColor))
+        }
+    }
+}
+
+// MARK: - COMPONENT 1: LEFT SIDEBAR (Config)
+struct RequestSidebar: View {
+    @ObservedObject var viewModel: HomeViewModel
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    TargetSectionView(viewModel: viewModel)
+                    Divider()
+                    HeadersSectionView(viewModel: viewModel)
+                    Divider()
+                    BodySectionView(viewModel: viewModel)
+                }
+                .padding()
+            }
+            
+            // Sticky Bottom Button
+            SendButtonView(
+                action: viewModel.runRealRequest,
+                isLoading: viewModel.isLoading // Oper status loading
+            )
+        }
+    }
+}
+
+// MARK: - COMPONENT 2: RIGHT PANEL (Result)
+struct ResponsePanel: View {
+    let response: APIResponse?
+    
+    var body: some View {
+        ZStack {
+            Color(NSColor.controlBackgroundColor).ignoresSafeArea()
+            
+            if let response = response {
+                VStack(alignment: .leading, spacing: 0) {
+                    // 1. Status Bar (Tetap di paling atas)
+                    ResponseHeaderView(response: response)
+                    
+                    Divider()
+                    
+                    // 2. Content (Headers + Body jadi satu)
+                    ResponseBodyView(content: generateMergedContent(from: response))
+                }
+            } else {
+                EmptyStateView()
+            }
+        }
+    }
+    
+    // Logic Penggabungan String
+    private func generateMergedContent(from response: APIResponse) -> String {
+        // A. Format Headers jadi String (Key: Value)
+        let headersString = response.headers
+            .sorted(by: <) // Urutkan biar rapi
+            .map { "\($0.key): \($0.value)" }
+            .joined(separator: "\n")
+        
+        // B. Gabung: Headers + 2 Enter + Body
+        return headersString + "\n\n" + response.body
+    }
+}
+
+// ==========================================
+// SUB-COMPONENTS (ATOMIC VIEWS)
+// ==========================================
+
+// MARK: - Sidebar Components
+
+struct TargetSectionView: View {
+    @ObservedObject var viewModel: HomeViewModel
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SectionHeader(title: "TARGET")
+            
+            // Method Picker & URL Input Wrapper
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    // Method Picker (Compact)
+                    Picker("", selection: $viewModel.selectedMethod) {
+                        ForEach(viewModel.methods, id: \.self) { m in Text(m) }
+                    }
+                    .labelsHidden()
+                    .frame(width: 90)
+                    .pickerStyle(.menu)
+                    
+                    Spacer()
+                }
+                
+                // Multi-line URL Editor
+                TextEditor(text: $viewModel.urlString)
+                    .font(.system(.body, design: .monospaced))
+                    .frame(height: 50)
+                    .padding(4)
+                    .background(Color(NSColor.textBackgroundColor))
+                    .cornerRadius(6)
+                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.gray.opacity(0.2)))
+            }
+        }
+    }
+}
+
+struct HeadersSectionView: View {
+    @ObservedObject var viewModel: HomeViewModel
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SectionHeader(title: "HEADERS")
+            
+            // Auth Shortcut
+            HStack {
+                Image(systemName: "key.fill").foregroundColor(.secondary)
+                TextField("Bearer Token (Optional)", text: $viewModel.authToken)
+                    .textFieldStyle(.plain)
+            }
+            .padding(8)
+            .background(Color(NSColor.controlBackgroundColor))
+            .cornerRadius(6)
+            .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.gray.opacity(0.2)))
+            
+            // Raw Headers Input
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Custom Headers (Key: Value)").font(.caption2).foregroundColor(.secondary)
+                TextEditor(text: $viewModel.rawHeaders)
+                    .font(.system(.caption, design: .monospaced))
+                    .frame(height: 80)
+                    .padding(4)
+                    .background(Color(NSColor.textBackgroundColor))
+                    .cornerRadius(6)
+                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.gray.opacity(0.2)))
+            }
+        }
+    }
+}
+
+struct BodySectionView: View {
+    @ObservedObject var viewModel: HomeViewModel
+    
+    var body: some View {
+        // Cuma render kalau method butuh body
+        if ["POST", "PUT", "PATCH"].contains(viewModel.selectedMethod) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    SectionHeader(title: "BODY PAYLOAD")
+                    Spacer()
+                    Text("JSON").font(.caption2).padding(.horizontal, 4)
+                        .background(Color.gray.opacity(0.2)).cornerRadius(4)
+                }
+                
+                TextEditor(text: $viewModel.requestBody)
+                    .font(.system(size: 12, design: .monospaced))
+                    .frame(height: 200)
+                    .padding(4)
+                    .background(Color(NSColor.textBackgroundColor))
+                    .cornerRadius(6)
+                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.gray.opacity(0.2)))
+            }
+        } else {
+            EmptyView()
+        }
+    }
+}
+
+struct SendButtonView: View {
+    var action: () -> Void
+    var isLoading: Bool // 1. Terima status loading
+    
+    var body: some View {
+        VStack {
+            Divider()
+            Button(action: action) {
+                HStack {
+                    if isLoading {
+                        // 2. Ganti Icon jadi Spinner kalau lagi loading
+                        ProgressView()
+                            .controlSize(.small)
+                            .colorInvert() // Biar putih di button biru
+                            .brightness(1)
+                    } else {
+                        Image(systemName: "paperplane.fill")
+                    }
+                    
+                    Text(isLoading ? "Sending..." : "Send Request")
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .disabled(isLoading) // 3. INI KUNCINYA! Tombol jadi abu-abu & gak bisa diklik
+            .padding()
+        }
+        .background(Color(NSColor.windowBackgroundColor))
+    }
+}
+
+// MARK: - Response Components
+
+struct ResponseHeaderView: View {
+    let response: APIResponse
+    
+    var body: some View {
+        HStack {
+            Text("RESPONSE")
+                .font(.headline)
+                .foregroundColor(.secondary)
+            
+            Spacer()
+            
+            // Status Badge
+            Text("\(response.statusCode) CREATED")
+                .font(.caption).bold()
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(statusCodeColor(response.statusCode))
+                .foregroundColor(.white)
+                .cornerRadius(4)
+            
+            // Latency Badge
+            HStack(spacing: 4) {
+                Image(systemName: "clock")
+                Text("\(String(format: "%.0f", response.latency)) ms")
+            }
+            .font(.caption)
+            .foregroundColor(.secondary)
+            .padding(.leading, 8)
+        }
+        .padding()
+        .background(Color(NSColor.windowBackgroundColor))
+    }
+    
+    private func statusCodeColor(_ code: Int) -> Color {
+        if code >= 200 && code < 300 { return .green }
+        if code >= 400 { return .red }
+        return .gray
+    }
+}
+
+struct ResponseBodyView: View {
+    let content: String
+    
+    var body: some View {
+        ScrollView {
+            Text(content)
+                .font(.system(.body, design: .monospaced))
+                .textSelection(.enabled)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding()
+        }
+    }
+}
+
+struct EmptyStateView: View {
+    var body: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "desktopcomputer")
+                .font(.system(size: 40))
+                .foregroundColor(.gray.opacity(0.3))
+            Text("Ready to send requests")
+                .font(.title3)
+                .foregroundColor(.gray.opacity(0.5))
+        }
+    }
+}
+
+// MARK: - Utilities
+
+struct SectionHeader: View {
+    let title: String
+    var body: some View {
+        Text(title)
+            .font(.caption)
+            .fontWeight(.bold)
+            .foregroundColor(.secondary)
+    }
+}
