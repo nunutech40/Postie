@@ -81,6 +81,7 @@ Postie menerapkan **Stateless Service Architecture**, memastikan setiap request 
 | **Processing** | Hitung latensi (ms) & JSON pretty-print | `JSONSerialization` |
 | **Output** | Update Status Code, Latency, dan Response UI | `@MainActor` |
 
+```mermaid
 flowchart TD
     A[User Input<br/>URL · Method · Headers · Body] --> B[Validation Layer<br/>Trim URL & Validate Format]
     B -->|Valid| C[Execute Request<br/>URLSession Ephemeral]
@@ -88,7 +89,7 @@ flowchart TD
     C --> D[Measure Latency (ms)]
     D --> E[Process Response<br/>Pretty Print JSON]
     E --> F[Update UI State<br/>Status · Latency · Body]
-
+```
 
 Pendekatan ini menjaga performa tetap stabil bahkan saat melakukan request berulang dalam sesi panjang.
 
@@ -100,6 +101,7 @@ Sistem persistensi Postie menggunakan **User-Initiated File Access** untuk menja
 
 ### 1️⃣ Alur Simpan (Save Request)
 
+```mermaid
 flowchart TD
     A[User klik "Save Preset"] --> B[FileService membuka NSSavePanel]
     B --> C{User pilih lokasi & nama file?}
@@ -107,10 +109,11 @@ flowchart TD
     C -- OK --> E[PresetService encode RequestPreset → JSON]
     E --> F[Write JSON ke disk]
     F --> G[Save selesai]
-
+```
 
 ### 2️⃣ Alur Buka (Open Request)
 
+```mermaid
 flowchart TD
     A[User klik "Folder / Load"] --> B[FileService membuka NSOpenPanel]
     B --> C{User memilih file .json?}
@@ -118,7 +121,7 @@ flowchart TD
     C -- OK --> E[PresetService decode JSON → RequestPreset]
     E --> F[Update ViewModel state]
     F --> G[SwiftUI re-render UI otomatis]
-
+```
 
 Model ini memastikan:
 - Tidak ada background file scanning
