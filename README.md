@@ -103,11 +103,11 @@ Sistem persistensi Postie menggunakan **User-Initiated File Access** untuk menja
 
 ```mermaid
 flowchart TD
-    A[User klik "Save Preset"] --> B[FileService membuka NSSavePanel]
-    B --> C{User pilih lokasi & nama file?}
+    A[User klik Save Preset] --> B[FileService membuka NSSavePanel]
+    B --> C{User pilih lokasi dan nama file?}
     C -- Cancel --> D[Proses dibatalkan]
-    C -- OK --> E[PresetService encode RequestPreset → JSON]
-    E --> F[Write JSON ke disk]
+    C -- OK --> E[PresetService encode RequestPreset to JSON]
+    E --> F[Tulis JSON ke disk]
     F --> G[Save selesai]
 ```
 
@@ -115,12 +115,12 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A[User klik "Folder / Load"] --> B[FileService membuka NSOpenPanel]
-    B --> C{User memilih file .json?}
+    A[User klik Folder Load] --> B[FileService membuka NSOpenPanel]
+    B --> C{User memilih file json?}
     C -- Cancel --> D[Proses dibatalkan]
-    C -- OK --> E[PresetService decode JSON → RequestPreset]
+    C -- OK --> E[PresetService decode JSON to RequestPreset]
     E --> F[Update ViewModel state]
-    F --> G[SwiftUI re-render UI otomatis]
+    F --> G[SwiftUI render ulang UI]
 ```
 
 Model ini memastikan:
