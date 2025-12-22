@@ -16,9 +16,9 @@
  - **URLSession (Foundation):** Menggunakan engine networking native macOS tanpa library pihak ketiga (zero-dependency) untuk meminimalkan beban RAM dan ukuran binary.
  - **Swift Concurrency (Async/Await):** Mengimplementasikan pola asinkron modern untuk menjaga responsivitas Main Thread saat menunggu respon server.
  - **JSONSerialization:** Melakukan parsing dan formatting JSON menggunakan parser native Apple yang sudah dioptimasi di level sistem operasi.
-
  
-
+ 
+ 
  ## 3. ALGORITMA & FLOW (LOGIC STREAM)
  Alur eksekusi `performRequest` mengikuti logika sekuensial berikut:
  
@@ -27,7 +27,7 @@
  3. **Payload Injection:** Menyuntikkan Method, Headers, dan Body secara selektif (hanya untuk method POST, PUT, dan PATCH).
  4. **Latency Measurement:** Menangkap `startTime` tepat sebelum request dikirim dan `endTime` segera setelah respon diterima untuk menghitung durasi milidetik yang akurat.
  5. **Error Mapping:** Menerjemahkan kode error sistem (seperti `.timedOut` atau `.notConnectedToInternet`) menjadi kategori error yang dipahami user (`PostieError`).
-
+ 
  ## 4. CATATAN PERFORMA & EFISIENSI (SENIOR INSIGHTS)
  - **Zero-Cache Policy:** Dengan mengatur `config.urlCache = nil`, service ini menghindari konsumsi RAM yang tidak perlu untuk menyimpan histori respon yang besar.
  - **Memory-Friendly Formatting:** Fungsi `prettyPrintJSON` memastikan payload yang berantakan dari server ditampilkan secara terstruktur (Indented) tanpa menggunakan library eksternal yang berat.
@@ -35,6 +35,13 @@
  */
 
 import Foundation
+
+enum DownloadUpdate {
+    case progress(Double, String)    // (Persentase 0.0-1.0, Label "10MB / 100MB")
+    case indeterminate(String)      // (Label "10MB received" - jika total gaib)
+    case finished
+    case error(String)
+}
 
 struct NetworkService {
     
@@ -127,5 +134,59 @@ struct NetworkService {
             return jsonString
         }
         return prettyString
+    }
+    
+    /// **Algorithm: Stream-based Download**
+    /// Membuka pipa data asinkron untuk memantau trafik download secara real-time.
+    static func downloadWithProgress(url: URL) -> AsyncStream<DownloadUpdate> {
+        AsyncStream { continuation in
+            let task = Task {
+                do {
+                    // 1. Inisialisasi Stream dari URLSession
+                    let (bytes, response) = try await customSession.bytes(from: url)
+                    
+                    // 2. Metadata: Cek apakah server ngasih tau total ukuran file
+                    let totalBytes = Double(response.expectedContentLength)
+                    var bytesReceived = 0.0
+                    
+                    // 3. Iterasi tiap chunk byte yang masuk
+                    for try await byte in bytes {
+                        bytesReceived += 1
+                        
+                        if totalBytes > 0 {
+                            // KASUS A: Determinate (Ada Progress Bar)
+                            let progress = bytesReceived / totalBytes
+                            let info = "\(formatBytes(bytesReceived)) / \(formatBytes(totalBytes))"
+                            continuation.yield(.progress(progress, info))
+                        } else {
+                            // KASUS B: Indeterminate (Hanya angka yang nambah)
+                            let info = "\(formatBytes(bytesReceived)) downloaded"
+                            continuation.yield(.indeterminate(info))
+                        }
+                    }
+                    
+                    continuation.yield(.finished)
+                    continuation.finish()
+                    
+                } catch {
+                    continuation.yield(.error(error.localizedDescription))
+                    continuation.finish()
+                }
+            }
+            
+            // Handle jika user membatalkan request dari UI
+            continuation.onTermination = { _ in
+                task.cancel()
+            }
+        }
+    }
+    
+    /// **Helper: Byte Formatter**
+    /// Konversi angka bytes ke format manusiawi (MB, GB, dll) untuk UI.
+    private static func formatBytes(_ bytes: Double) -> String {
+        let formatter = ByteCountFormatter()
+        formatter.allowedUnits = [.useMB, .useKB, .useGB]
+        formatter.countStyle = .file
+        return formatter.string(fromByteCount: Int64(bytes))
     }
 }

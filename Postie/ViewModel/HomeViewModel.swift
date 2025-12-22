@@ -29,6 +29,12 @@ class HomeViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     
+    // --- DOWNLOAD STATE ---
+    @Published var downloadProgress: Double = 0.0
+    @Published var isDownloading = false
+    @Published var downloadInfo: String = ""
+    @Published var totalBytesKnown: Bool = false
+    
     let methods = ["GET", "POST", "PUT", "DELETE", "PATCH"]
     
     // --- MAIN ACTION: SEND REAL REQUEST ---
@@ -123,5 +129,39 @@ class HomeViewModel: ObservableObject {
         } catch {
             self.errorMessage = error.localizedDescription
         }
+    }
+    
+    // --- DOWNLOAD ACTION ---
+    @MainActor
+    func runDownload() async {
+        guard let url = URL(string: urlString.trimmingCharacters(in: .whitespacesAndNewlines)) else {
+            self.errorMessage = "URL Invalid"
+            return
+        }
+        
+        self.isDownloading = true
+        self.downloadProgress = 0.0
+        self.downloadInfo = "Starting download..."
+        
+        // Memanggil NetworkService yang mengembalikan AsyncStream
+        let stream = NetworkService.downloadWithProgress(url: url)
+        
+        for await update in stream {
+            switch update {
+            case .progress(let percent, let info):
+                self.totalBytesKnown = true
+                self.downloadProgress = percent
+                self.downloadInfo = info
+            case .indeterminate(let info):
+                self.totalBytesKnown = false
+                self.downloadInfo = info
+            case .finished:
+                self.downloadInfo = "Download Complete"
+            case .error(let msg):
+                self.errorMessage = msg
+            }
+        }
+        
+        self.isDownloading = false
     }
 }

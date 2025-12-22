@@ -24,7 +24,7 @@ struct HomeView: View {
             Divider()
             
             // 2. RIGHT COLUMN: Result
-            ResponsePanel(response: viewModel.response)
+            ResponsePanel(viewModel: viewModel)
                 .background(Color(NSColor.controlBackgroundColor))
         }
         // 2. TAMBAH TOOLBAR DI POJOK KANAN ATAS
@@ -75,10 +75,17 @@ struct RequestSidebar: View {
             // Di dalam RequestSidebar (HomeView.swift)
             SendButtonView(
                 action: {
-                    // Panggil fungsi secara eksplisit di dalam closure
-                    viewModel.runRealRequest()
+                    // Logika Deteksi: File Gede vs JSON Biasa
+                    if viewModel.urlString.contains(".zip") ||
+                        viewModel.urlString.contains(".mp4") ||
+                        viewModel.urlString.contains("bytes=") {
+                        Task { await viewModel.runDownload() }
+                    } else {
+                        viewModel.runRealRequest()
+                    }
                 },
-                isLoading: viewModel.isLoading
+                // Pastikan tombol sadar kalau lagi download ATAU lagi request biasa
+                isLoading: viewModel.isLoading || viewModel.isDownloading
             )
         }
     }
@@ -86,24 +93,31 @@ struct RequestSidebar: View {
 
 // MARK: - COMPONENT 2: RIGHT PANEL (Result)
 struct ResponsePanel: View {
-    let response: APIResponse?
+    @ObservedObject var viewModel: HomeViewModel
     
     var body: some View {
         ZStack {
             Color(NSColor.controlBackgroundColor).ignoresSafeArea()
             
-            if let response = response {
-                VStack(alignment: .leading, spacing: 0) {
-                    // 1. Status Bar (Tetap di paling atas)
-                    ResponseHeaderView(response: response)
-                    
-                    Divider()
-                    
-                    // 2. Content (Headers + Body jadi satu)
-                    ResponseBodyView(content: generateMergedContent(from: response))
+            VStack(spacing: 0) {
+                // --- KASUS 1: SEDANG DOWNLOAD ---
+                if viewModel.isDownloading {
+                    Spacer()
+                    DownloadProgressView(viewModel: viewModel)
+                    Spacer()
                 }
-            } else {
-                EmptyStateView()
+                // --- KASUS 2: ADA RESPON ---
+                else if let response = viewModel.response {
+                    VStack(alignment: .leading, spacing: 0) {
+                        ResponseHeaderView(response: response)
+                        Divider()
+                        ResponseBodyView(content: generateMergedContent(from: response))
+                    }
+                }
+                // --- KASUS 3: KOSONG ---
+                else {
+                    EmptyStateView()
+                }
             }
         }
     }
@@ -428,5 +442,54 @@ struct SectionHeader: View {
             .font(.caption)
             .fontWeight(.bold)
             .foregroundColor(.secondary)
+    }
+}
+
+struct DownloadProgressView: View {
+    @ObservedObject var viewModel: HomeViewModel
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            HStack {
+                Image(systemName: "arrow.down.circle.fill")
+                    .foregroundColor(.blue)
+                    .font(.title2)
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Downloading Resource...")
+                        .font(.headline)
+                    Text(viewModel.downloadInfo)
+                        .font(.caption)
+                        .monospacedDigit()
+                        .foregroundColor(.secondary)
+                }
+                Spacer()
+                
+                // Tombol Cancel (Optional tapi Pro)
+                Button("Cancel") {
+                    // viewModel.cancelDownload()
+                }
+                .buttonStyle(.link)
+                .foregroundColor(.red)
+            }
+            
+            if viewModel.totalBytesKnown {
+                // Bar yang jalan 0% -> 100%
+                ProgressView(value: viewModel.downloadProgress)
+                    .progressViewStyle(.linear)
+            } else {
+                // Spinner/Bar pulsing kalau total data gaib
+                ProgressView()
+                    .controlSize(.small)
+            }
+        }
+        .padding()
+        .background(Color(NSColor.windowBackgroundColor).opacity(0.5))
+        .cornerRadius(10)
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(Color.blue.opacity(0.3), lineWidth: 1)
+        )
+        .padding()
     }
 }
