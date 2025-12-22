@@ -82,13 +82,14 @@ Postie menerapkan **Stateless Service Architecture**, memastikan setiap request 
 | **Output** | Update Status Code, Latency, dan Response UI | `@MainActor` |
 
 ```mermaid
+%%{init: {'themeVariables': { 'fontSize': '12px' }}}%%
 flowchart TD
-    A[User Input<br/>URL · Method · Headers · Body] --> B[Validation Layer<br/>Trim URL & Validate Format]
-    B -->|Valid| C[Execute Request<br/>URLSession Ephemeral]
+    A[User Input: URL, Method, Headers, Body] --> B[Validation Layer: Trim and Validate]
+    B -->|Valid| C[Execute Request: URLSession Ephemeral]
     B -->|Invalid| X[Show Validation Error]
-    C --> D[Measure Latency (ms)]
-    D --> E[Process Response<br/>Pretty Print JSON]
-    E --> F[Update UI State<br/>Status · Latency · Body]
+    C --> D[Measure Latency ms]
+    D --> E[Process Response: Pretty Print JSON]
+    E --> F[Update UI State: Status, Latency, Body]
 ```
 
 Pendekatan ini menjaga performa tetap stabil bahkan saat melakukan request berulang dalam sesi panjang.
@@ -102,6 +103,7 @@ Sistem persistensi Postie menggunakan **User-Initiated File Access** untuk menja
 ### 1️⃣ Alur Simpan (Save Request)
 
 ```mermaid
+%%{init: {'themeVariables': { 'fontSize': '12px' }}}%%
 flowchart TD
     A[User klik Save Preset] --> B[FileService membuka NSSavePanel]
     B --> C{User pilih lokasi dan nama file?}
@@ -114,6 +116,7 @@ flowchart TD
 ### 2️⃣ Alur Buka (Open Request)
 
 ```mermaid
+%%{init: {'themeVariables': { 'fontSize': '12px' }}}%%
 flowchart TD
     A[User klik Folder Load] --> B[FileService membuka NSOpenPanel]
     B --> C{User memilih file json?}
