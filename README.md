@@ -81,6 +81,15 @@ Postie menerapkan **Stateless Service Architecture**, memastikan setiap request 
 | **Processing** | Hitung latensi (ms) & JSON pretty-print | `JSONSerialization` |
 | **Output** | Update Status Code, Latency, dan Response UI | `@MainActor` |
 
+flowchart TD
+    A[User Input<br/>URL · Method · Headers · Body] --> B[Validation Layer<br/>Trim URL & Validate Format]
+    B -->|Valid| C[Execute Request<br/>URLSession Ephemeral]
+    B -->|Invalid| X[Show Validation Error]
+    C --> D[Measure Latency (ms)]
+    D --> E[Process Response<br/>Pretty Print JSON]
+    E --> F[Update UI State<br/>Status · Latency · Body]
+
+
 Pendekatan ini menjaga performa tetap stabil bahkan saat melakukan request berulang dalam sesi panjang.
 
 ---
@@ -91,17 +100,25 @@ Sistem persistensi Postie menggunakan **User-Initiated File Access** untuk menja
 
 ### 1️⃣ Alur Simpan (Save Request)
 
-- **Trigger:** User menekan tombol **Save Preset**
-- **Dialog:** `FileService` memicu `NSSavePanel` (native macOS)
-- **Encoding:** `PresetService` mengonversi `RequestPreset` menjadi JSON
-- **I/O:** Data ditulis langsung ke disk di lokasi pilihan user
+flowchart TD
+    A[User klik "Save Preset"] --> B[FileService membuka NSSavePanel]
+    B --> C{User pilih lokasi & nama file?}
+    C -- Cancel --> D[Proses dibatalkan]
+    C -- OK --> E[PresetService encode RequestPreset → JSON]
+    E --> F[Write JSON ke disk]
+    F --> G[Save selesai]
+
 
 ### 2️⃣ Alur Buka (Open Request)
 
-- **Trigger:** User menekan tombol **Folder / Load**
-- **Dialog:** `FileService` memicu `NSOpenPanel` dengan filter `.json`
-- **Decoding:** JSON dipetakan kembali ke struktur Swift
-- **State Update:** ViewModel diperbarui → UI re-render otomatis
+flowchart TD
+    A[User klik "Folder / Load"] --> B[FileService membuka NSOpenPanel]
+    B --> C{User memilih file .json?}
+    C -- Cancel --> D[Proses dibatalkan]
+    C -- OK --> E[PresetService decode JSON → RequestPreset]
+    E --> F[Update ViewModel state]
+    F --> G[SwiftUI re-render UI otomatis]
+
 
 Model ini memastikan:
 - Tidak ada background file scanning
