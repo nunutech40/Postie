@@ -40,7 +40,7 @@ Pendekatan ini memastikan aplikasi tetap **ringan, cepat, dan stabil** bahkan sa
 
 ---
 
-## 🛠️ Arsitektur & Teknologi  
+## 🏗️ Arsitektur & Teknologi  
 
 Postie dibangun dengan pola **MVVM + Service Layer** yang terpisah jelas, memastikan kode mudah dirawat, diuji, dan dikembangkan.
 
@@ -69,7 +69,48 @@ Menggunakan `URLSessionConfiguration` kustom untuk kontrol penuh terhadap perfor
 
 ---
 
-### 3. Logic-Driven Unit Testing
+## 🏗️ Alur Kerja & Logika Bisnis (Business Logic Flow)
+
+Postie menerapkan **Stateless Service Architecture**, memastikan setiap request diproses secara independen tanpa meninggalkan *residual state* di memori.
+
+| Tahap | Aktivitas Utama | Teknologi |
+|-----|----------------|-----------|
+| **Input** | User memasukkan URL, Method, Header, dan Body | SwiftUI View State |
+| **Validation** | Trimming URL & validasi format | NetworkService |
+| **Execution** | Trigger request asinkron dengan kebijakan zero-cache | `URLSession` (Ephemeral) |
+| **Processing** | Hitung latensi (ms) & JSON pretty-print | `JSONSerialization` |
+| **Output** | Update Status Code, Latency, dan Response UI | `@MainActor` |
+
+Pendekatan ini menjaga performa tetap stabil bahkan saat melakukan request berulang dalam sesi panjang.
+
+---
+
+## 💾 Manajemen Preset (Save & Open Flow)
+
+Sistem persistensi Postie menggunakan **User-Initiated File Access** untuk menjaga keamanan (Sandboxing) dan efisiensi memori.
+
+### 1️⃣ Alur Simpan (Save Request)
+
+- **Trigger:** User menekan tombol **Save Preset**
+- **Dialog:** `FileService` memicu `NSSavePanel` (native macOS)
+- **Encoding:** `PresetService` mengonversi `RequestPreset` menjadi JSON
+- **I/O:** Data ditulis langsung ke disk di lokasi pilihan user
+
+### 2️⃣ Alur Buka (Open Request)
+
+- **Trigger:** User menekan tombol **Folder / Load**
+- **Dialog:** `FileService` memicu `NSOpenPanel` dengan filter `.json`
+- **Decoding:** JSON dipetakan kembali ke struktur Swift
+- **State Update:** ViewModel diperbarui → UI re-render otomatis
+
+Model ini memastikan:
+- Tidak ada background file scanning
+- Tidak ada cache tersembunyi
+- Kontrol penuh berada di tangan user
+
+---
+
+## 🧪 Logic-Driven Unit Testing
 
 Postie tidak hanya fokus pada UI, tetapi juga fondasi logic yang kuat dan teruji:
 
@@ -94,6 +135,19 @@ Postie tidak hanya fokus pada UI, tetapi juga fondasi logic yang kuat dan teruji
 
 ---
 
+## 📋 Checklist (Technical Enforcement)
+
+- [x] **Memory Management**  
+  Optimalisasi menggunakan `NSTextStorage` dan `setAttributedString` untuk menjaga RAM < 40 MB.
+
+- [x] **Clean Architecture**  
+  Pemisahan tegas antara UI (SwiftUI), Logic (ViewModel), dan System Interaction (Service Layer).
+
+- [x] **Native Performance First**  
+  0% third-party libraries, 100% Apple SDK.
+
+---
+
 ## 🚀 Instalasi
 
 1. Clone repository ini.
@@ -106,14 +160,5 @@ Postie tidak hanya fokus pada UI, tetapi juga fondasi logic yang kuat dan teruji
 
 ## 👨‍💻 Author
 
-** Nunu Nugraha 
+**Nunu Nugraha**  
 *iOS Developer* yang percaya bahwa aplikasi hebat adalah aplikasi yang **cepat, stabil, dan tepat guna** — bukan yang paling banyak dependency.
-
----
-
-## 💡 Catatan
-
-- Letakkan file ini di root project dengan nama `README.md`.
-- Disarankan menambahkan **screenshot aplikasi** di bagian paling atas untuk *visual hook*.
-- Struktur ini dirancang agar mudah dibaca oleh **Recruiter, Engineering Manager, maupun CTO**.
-
