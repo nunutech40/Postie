@@ -133,6 +133,60 @@ Model ini memastikan:
 
 ---
 
+## 📥 Smart Streaming Download Engine
+
+Fitur ini dirancang untuk melakukan **pengujian throughput jaringan** dan **unduhan file besar**
+tanpa mengorbankan stabilitas memori aplikasi.
+
+Pendekatan ini memastikan Postie tetap **responsif, efisien, dan aman** meskipun memproses data berukuran besar.
+
+---
+
+## 🛠️ Teknologi & Konsep Utama
+
+Postie **tidak menggunakan pendekatan download-to-memory konvensional**.
+Sebaliknya, fitur ini dibangun di atas fondasi berikut:
+
+- **AsyncStream (Swift Concurrency)**  
+  Mengelola aliran data asinkron dan memungkinkan pengiriman update status ke UI
+  secara berkelanjutan tanpa memblokir thread utama.
+
+- **URLSession.bytes(from:)**  
+  Menggunakan API low-level untuk membaca data sebagai **stream byte**
+  alih-alih memuat seluruh file ke dalam satu objek `Data`.
+
+- **MainActor Isolation**  
+  Menjamin sinkronisasi antara pipa data jaringan dan pembaruan `ProgressView`
+  agar tetap **thread-safe**.
+
+---
+
+## 🔄 Alur Logika Bisnis (Business Logic Flow)
+
+Berikut adalah algoritma yang dijalankan saat user menekan tombol **Send**
+untuk melakukan unduhan file besar.
+
+```mermaid
+%%{init: {'themeVariables': { 'fontSize': '12px' }}}%%
+flowchart TD
+    A[User tekan Send] --> B[NetworkService membuka koneksi URLSession Ephemeral]
+    B --> C[Ambil HTTP Header Content Length]
+    C --> D{Ukuran file diketahui?}
+    D -- Ya --> E[Mode Determinate Progress]
+    D -- Tidak --> F[Mode Indeterminate Progress]
+    E --> G[Mulai Byte Streaming]
+    F --> G[Mulai Byte Streaming]
+    G --> H[Iterasi byte menggunakan AsyncStream]
+    H --> I[Hitung total byte diterima]
+    I --> J[Yield progress ke ViewModel]
+    J --> K[Update ProgressView via MainActor]
+    K --> L{Download selesai atau Cancel?}
+    L -- Selesai --> M[Stream ditutup otomatis]
+    L -- Cancel --> N[Task.cancel dan hentikan stream]
+```
+
+
+
 ## 🧪 Logic-Driven Unit Testing
 
 Postie tidak hanya fokus pada UI, tetapi juga fondasi logic yang kuat dan teruji:
