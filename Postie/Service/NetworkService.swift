@@ -5,6 +5,35 @@
 //  Created by Nunu Nugraha on 21/12/25.
 //
 
+/**
+ # NETWORK SERVICE (CORE NETWORKING ENGINE)
+ 
+ ## 1. TUJUAN (PURPOSE)
+ NetworkService adalah jantung dari aplikasi Postie yang bertanggung jawab mengelola siklus hidup permintaan HTTP.
+ Tujuannya adalah mengeksekusi request secara asinkron, menghitung latensi secara presisi, dan mentransformasi respon mentah dari server menjadi objek `APIResponse` yang siap ditampilkan ke UI.
+ 
+ ## 2. TEKNOLOGI (TECH STACK)
+ - **URLSession (Foundation):** Menggunakan engine networking native macOS tanpa library pihak ketiga (zero-dependency) untuk meminimalkan beban RAM dan ukuran binary.
+ - **Swift Concurrency (Async/Await):** Mengimplementasikan pola asinkron modern untuk menjaga responsivitas Main Thread saat menunggu respon server.
+ - **JSONSerialization:** Melakukan parsing dan formatting JSON menggunakan parser native Apple yang sudah dioptimasi di level sistem operasi.
+
+ 
+
+ ## 3. ALGORITMA & FLOW (LOGIC STREAM)
+ Alur eksekusi `performRequest` mengikuti logika sekuensial berikut:
+ 
+ 1. **Session Configuration:** Inisialisasi `URLSession` dengan konfigurasi `ephemeral` untuk memastikan tidak ada cache atau cookies yang tersimpan secara permanen di disk.
+ 2. **Request Validation:** Membersihkan URL dari karakter ilegal (whitespaces) sebelum dibungkus ke dalam objek `URLRequest`.
+ 3. **Payload Injection:** Menyuntikkan Method, Headers, dan Body secara selektif (hanya untuk method POST, PUT, dan PATCH).
+ 4. **Latency Measurement:** Menangkap `startTime` tepat sebelum request dikirim dan `endTime` segera setelah respon diterima untuk menghitung durasi milidetik yang akurat.
+ 5. **Error Mapping:** Menerjemahkan kode error sistem (seperti `.timedOut` atau `.notConnectedToInternet`) menjadi kategori error yang dipahami user (`PostieError`).
+
+ ## 4. CATATAN PERFORMA & EFISIENSI (SENIOR INSIGHTS)
+ - **Zero-Cache Policy:** Dengan mengatur `config.urlCache = nil`, service ini menghindari konsumsi RAM yang tidak perlu untuk menyimpan histori respon yang besar.
+ - **Memory-Friendly Formatting:** Fungsi `prettyPrintJSON` memastikan payload yang berantakan dari server ditampilkan secara terstruktur (Indented) tanpa menggunakan library eksternal yang berat.
+ - **Low Footprint:** Penggunaan sesi `ephemeral` secara statis membantu Postie mempertahankan target penggunaan memori di bawah 50MB meskipun menangani payload JSON yang cukup besar.
+ */
+
 import Foundation
 
 struct NetworkService {
