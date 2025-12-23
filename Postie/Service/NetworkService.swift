@@ -51,10 +51,13 @@ struct NetworkService {
     /// 2. `urlCache = nil`: Mematikan cache agar testing API selalu mendapatkan data terbaru dari server.
     /// 3. `waitsForConnectivity`: Menunda request jika koneksi hilang sementara, alih-alih langsung gagal.
     private static var customSession: URLSession {
-        let config = URLSessionConfiguration.ephemeral // tidak menyimpan cookies, cache, sertifikat ke hd
-        config.timeoutIntervalForRequest = 30.0
+        let config = URLSessionConfiguration.ephemeral
+        config.timeoutIntervalForRequest = 15.0 // 30 detik kelamaan buat testing, 15s cukup
         config.urlCache = nil
-        config.waitsForConnectivity = true
+        
+        // MATIKAN INI! Biar kalau error langsung "jeder" keluar, nggak nunggu.
+        config.waitsForConnectivity = false
+        
         return URLSession(configuration: config)
     }
     
@@ -112,14 +115,19 @@ struct NetworkService {
             )
             
         } catch let error as URLError {
-            // Pemetaan error sistem macOS ke bahasa yang dimengerti user
             switch error.code {
-            case .timedOut: throw PostieError.timeout
-            case .notConnectedToInternet, .networkConnectionLost: throw PostieError.noInternet
-            default: throw PostieError.unknown(error.localizedDescription)
+            case .timedOut:
+                throw PostieError.timeout
+            case .notConnectedToInternet, .networkConnectionLost:
+                throw PostieError.noInternet
+            
+            // Gunakan dua ini untuk menangkap server Vapor yang mati/off
+            case .cannotConnectToHost, .cannotFindHost:
+                throw PostieError.serverDown
+                
+            default:
+                throw PostieError.unknown(error.localizedDescription)
             }
-        } catch {
-            throw error
         }
     }
     

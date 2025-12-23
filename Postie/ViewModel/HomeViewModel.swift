@@ -37,38 +37,51 @@ class HomeViewModel: ObservableObject {
     
     let methods = ["GET", "POST", "PUT", "DELETE", "PATCH"]
     
+    private var currentRequestTask: Task<Void, Never>?
+    private var currentDownloadTask: Task<Void, Never>?
+    
     // --- MAIN ACTION: SEND REAL REQUEST ---
     @discardableResult
     @MainActor
     func runRealRequest() -> Task<Void, Never> {
+        // 1. Batalkan request yang masih jalan sebelum bikin yang baru
+        currentRequestTask?.cancel()
+        
         self.isLoading = true
         self.errorMessage = nil
-        // Paksa nil dan pastikan tidak ada referensi yang nyangkut
-        if self.response != nil {
-            self.response = nil
-        }
+        self.response = nil
         
-        return Task {
+        // 2. Simpan task baru ke variabel
+        currentRequestTask = Task {
+            // 3. Gunakan defer: loading PASTI berhenti mau sukses atau gagal
+            defer {
+                // Pastikan tidak mematikan loading milik task baru
+                if !Task.isCancelled { self.isLoading = false }
+            }
+            
             do {
-                var headers = parseHeaders(rawText: rawHeaders)
-                if !authToken.isEmpty {
-                    headers["Authorization"] = "Bearer \(authToken)"
-                }
+                let headers = parseHeaders(rawText: rawHeaders)
+                let finalHeaders = !authToken.isEmpty ?
+                headers.merging(["Authorization": "Bearer \(authToken)"]) { (_, new) in new } : headers
                 
                 let result = try await NetworkService.performRequest(
                     url: urlString,
                     method: selectedMethod,
-                    headers: headers,
+                    headers: finalHeaders,
                     body: requestBody
                 )
                 
-                self.response = result
-                self.isLoading = false
+                // 4. Cek cancellation: Jangan update UI kalau task ini sudah dibatalkan
+                if !Task.isCancelled {
+                    self.response = result
+                }
             } catch {
-                self.errorMessage = error.localizedDescription
-                self.isLoading = false
+                if !Task.isCancelled {
+                    self.errorMessage = error.localizedDescription
+                }
             }
         }
+        return currentRequestTask!
     }
     
     // --- HELPER LOGIC ---
@@ -133,35 +146,38 @@ class HomeViewModel: ObservableObject {
     
     // --- DOWNLOAD ACTION ---
     @MainActor
-    func runDownload() async {
-        guard let url = URL(string: urlString.trimmingCharacters(in: .whitespacesAndNewlines)) else {
-            self.errorMessage = "URL Invalid"
-            return
-        }
+    func runDownload() {
+        currentDownloadTask?.cancel()
         
-        self.isDownloading = true
-        self.downloadProgress = 0.0
-        self.downloadInfo = "Starting download..."
-        
-        // Memanggil NetworkService yang mengembalikan AsyncStream
-        let stream = NetworkService.downloadWithProgress(url: url)
-        
-        for await update in stream {
-            switch update {
-            case .progress(let percent, let info):
-                self.totalBytesKnown = true
-                self.downloadProgress = percent
-                self.downloadInfo = info
-            case .indeterminate(let info):
-                self.totalBytesKnown = false
-                self.downloadInfo = info
-            case .finished:
-                self.downloadInfo = "Download Complete"
-            case .error(let msg):
-                self.errorMessage = msg
+        currentDownloadTask = Task {
+            guard let url = URL(string: urlString.trimmingCharacters(in: .whitespacesAndNewlines)) else {
+                self.errorMessage = "URL Invalid"
+                return
+            }
+            
+            self.isDownloading = true
+            defer { self.isDownloading = false }
+            
+            let stream = NetworkService.downloadWithProgress(url: url)
+            
+            for await update in stream {
+                // 5. Penting: Berhenti iterasi kalau task dibatalkan
+                if Task.isCancelled { break }
+                
+                switch update {
+                case .progress(let percent, let info):
+                    self.totalBytesKnown = true
+                    self.downloadProgress = percent
+                    self.downloadInfo = info
+                case .indeterminate(let info):
+                    self.totalBytesKnown = false
+                    self.downloadInfo = info
+                case .finished:
+                    self.downloadInfo = "Download Complete"
+                case .error(let msg):
+                    self.errorMessage = msg
+                }
             }
         }
-        
-        self.isDownloading = false
     }
 }
