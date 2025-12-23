@@ -79,7 +79,7 @@ struct RequestSidebar: View {
                     if viewModel.urlString.contains(".zip") ||
                         viewModel.urlString.contains(".mp4") ||
                         viewModel.urlString.contains("bytes=") {
-                        Task { await viewModel.runDownload() }
+                        Task { viewModel.runDownload() }
                     } else {
                         viewModel.runRealRequest()
                     }
@@ -194,8 +194,9 @@ struct TargetSectionView: View {
                     Spacer()
                 }
                 
-                TextEditor(text: $viewModel.urlString)
+                NativeEditableTextView(text: $viewModel.urlString)
                     .font(.system(.body, design: .monospaced))
+                    .autocorrectionDisabled(true)
                     .frame(height: 50)
                     .padding(4)
                     .background(Color(NSColor.textBackgroundColor))
@@ -227,9 +228,10 @@ struct HeadersSectionView: View {
             // Raw Headers Input
             VStack(alignment: .leading, spacing: 4) {
                 Text("Custom Headers (Key: Value)").font(.caption2).foregroundColor(.secondary)
-                TextEditor(text: $viewModel.rawHeaders)
+                NativeEditableTextView(text: $viewModel.rawHeaders)
                     .font(.system(.caption, design: .monospaced))
                     .frame(height: 80)
+                    .autocorrectionDisabled(true)
                     .padding(4)
                     .background(Color(NSColor.textBackgroundColor))
                     .cornerRadius(6)
@@ -253,9 +255,10 @@ struct BodySectionView: View {
                         .background(Color.gray.opacity(0.2)).cornerRadius(4)
                 }
                 
-                TextEditor(text: $viewModel.requestBody)
+                NativeEditableTextView(text: $viewModel.requestBody)
                     .font(.system(size: 12, design: .monospaced))
                     .frame(height: 200)
+                    .autocorrectionDisabled(true)
                     .padding(4)
                     .background(Color(NSColor.textBackgroundColor))
                     .cornerRadius(6)
