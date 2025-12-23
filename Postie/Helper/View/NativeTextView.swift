@@ -21,8 +21,6 @@ import AppKit
  - **NSTextView (AppKit):** Engine teks native macOS yang memiliki efisiensi rendering jauh lebih tinggi untuk data statis berukuran besar.
  - **NSTextStorage:** Pipa penyimpanan data teks di mana kita bisa memanipulasi konten secara atomik di level memori.
 
- 
-
  ## 3. ALGORITMA & FLOW (LOGIC STREAM)
  Alur optimasi memori dalam komponen ini bekerja sebagai berikut:
  
