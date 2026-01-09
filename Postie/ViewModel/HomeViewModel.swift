@@ -81,10 +81,11 @@ class HomeViewModel: ObservableObject {
                 // 4. Cek cancellation: Jangan update UI kalau task ini sudah dibatalkan
                 if !Task.isCancelled {
                     self.response = result
-                    addRequestToHistory()
+                    addRequestToHistory(wasSuccessful: true)
                 }
             } catch {
                 if !Task.isCancelled {
+                    addRequestToHistory(wasSuccessful: false)
                     self.errorMessage = error.localizedDescription
                 }
             }
@@ -121,7 +122,8 @@ class HomeViewModel: ObservableObject {
             url: self.urlString,
             authToken: self.authToken,
             rawHeaders: self.rawHeaders,
-            requestBody: self.requestBody
+            requestBody: self.requestBody,
+            wasSuccessful: true
         )
         
         // 3. Suruh PresetService simpan ke disk
@@ -154,13 +156,14 @@ class HomeViewModel: ObservableObject {
     
     // --- HISTORY LOGIC ---
     @MainActor
-    func addRequestToHistory() {
+    func addRequestToHistory(wasSuccessful: Bool) {
         let preset = RequestPreset(
             method: self.selectedMethod,
             url: self.urlString,
             authToken: self.authToken,
             rawHeaders: self.rawHeaders,
-            requestBody: self.requestBody
+            requestBody: self.requestBody,
+            wasSuccessful: wasSuccessful
         )
         
         self.requestHistory = HistoryService.add(request: preset, to: self.requestHistory)

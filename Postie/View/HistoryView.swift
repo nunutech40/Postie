@@ -98,6 +98,7 @@ struct HistoryRequestRow: View {
             )
         }
         .buttonStyle(.plain)
+        .opacity(request.wasSuccessful ? 1.0 : 0.5)
     }
     
     private func methodColor(_ method: String) -> Color {
