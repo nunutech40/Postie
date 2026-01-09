@@ -470,7 +470,7 @@ struct DownloadProgressView: View {
                 
                 // Tombol Cancel (Optional tapi Pro)
                 Button("Cancel") {
-                    // viewModel.cancelDownload()
+                    viewModel.cancelDownload()
                 }
                 .buttonStyle(.link)
                 .foregroundColor(.red)

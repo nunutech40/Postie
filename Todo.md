@@ -10,10 +10,10 @@ Fitur-fitur ini penting untuk melengkapi fungsionalitas yang ada, meningkatkan a
 
 ### 1. Mekanisme Pembatalan Request/Download
 
--   [ ] **Mengapa:** UI untuk pembatalan download sudah ada, tetapi logika dasar untuk menghubungkannya ke `Task.cancel()` di `HomeViewModel` masih hilang. Memberikan kontrol kepada pengguna untuk menghentikan request yang lambat, salah, atau tidak lagi diperlukan adalah fundamental untuk pengalaman pengguna yang lancar.
--   [ ] **Implementasi:**
-    -   [ ] Tambahkan metode `cancelRequest()` dan `cancelDownload()` di `HomeViewModel.swift` yang memanggil `currentRequestTask?.cancel()` dan `currentDownloadTask?.cancel()` masing-masing.
-    -   [ ] Hubungkan metode-metode ini ke tombol "Cancel" di `HomeView.swift` (khususnya `DownloadProgressView` dan berpotensi tombol "Send" utama selama request aktif).
+-   [*] **Mengapa:** UI untuk pembatalan download sudah ada, tetapi logika dasar untuk menghubungkannya ke `Task.cancel()` di `HomeViewModel` masih hilang. Memberikan kontrol kepada pengguna untuk menghentikan request yang lambat, salah, atau tidak lagi diperlukan adalah fundamental untuk pengalaman pengguna yang lancar.
+-   [*] **Implementasi:**
+    -   [*] Tambahkan metode `cancelRequest()` dan `cancelDownload()` di `HomeViewModel.swift` yang memanggil `currentRequestTask?.cancel()` dan `currentDownloadTask?.cancel()` masing-masing.
+    -   [*] Hubungkan metode-metode ini ke tombol "Cancel" di `HomeView.swift` (khususnya `DownloadProgressView` dan berpotensi tombol "Send" utama selama request aktif).
 
 ### 2. Riwayat Request (Request History)
 

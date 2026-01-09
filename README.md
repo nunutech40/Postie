@@ -135,8 +135,7 @@ Model ini memastikan:
 
 ## 📥 Smart Streaming Download Engine
 
-Fitur ini dirancang untuk melakukan **pengujian throughput jaringan** dan **unduhan file besar**
-tanpa mengorbankan stabilitas memori aplikasi.
+Fitur ini dirancang untuk melakukan **pengujian throughput jaringan** dan **unduhan file besar**. **Data yang diunduh diproses secara real-time untuk mendapatkan metrik performa dan memperbarui progress, namun tidak disimpan ke disk** untuk menjaga stabilitas memori aplikasi dan fokus pada fungsi pengujian.
 
 Pendekatan ini memastikan Postie tetap **responsif, efisien, dan aman** meskipun memproses data berukuran besar.
 
