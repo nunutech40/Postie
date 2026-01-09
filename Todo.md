@@ -17,10 +17,10 @@ Fitur-fitur ini penting untuk melengkapi fungsionalitas yang ada, meningkatkan a
 
 ### 2. Riwayat Request (Request History)
 
--   [ ] **Mengapa:** Meskipun preset berbasis file menawarkan portabilitas, riwayat singkat request yang baru saja dieksekusi adalah fitur standar dan sangat dihargai di klien API. Ini secara signifikan meningkatkan produktivitas developer dengan memungkinkan eksekusi ulang atau modifikasi yang mudah dari panggilan terakhir.
--   [ ] **Implementasi:**
-    -   [ ] Terapkan mekanisme untuk menyimpan request yang berhasil terakhir (misalnya, 20-50 request unik terakhir, mungkin versi sederhana dari `RequestPreset`) di `UserDefaults` atau file JSON ringan.
-    -   [ ] Buat komponen UI baru (misalnya, tab atau popover) untuk menampilkan dan berinteraksi dengan riwayat ini.
+-   [*] **Mengapa:** Meskipun preset berbasis file menawarkan portabilitas, riwayat singkat request yang baru saja dieksekusi adalah fitur standar dan sangat dihargai di klien API. Ini secara signifikan meningkatkan produktivitas developer dengan memungkinkan eksekusi ulang atau modifikasi yang mudah dari panggilan terakhir.
+-   [*] **Implementasi:**
+    -   [*] Terapkan mekanisme untuk menyimpan request yang berhasil terakhir (misalnya, 20-50 request unik terakhir, mungkin versi sederhana dari `RequestPreset`) di `UserDefaults` atau file JSON ringan.
+    -   [*] Buat komponen UI baru (misalnya, tab atau popover) untuk menampilkan dan berinteraksi dengan riwayat ini.
 
 ### 3. Manajemen Environment & Variabel
 

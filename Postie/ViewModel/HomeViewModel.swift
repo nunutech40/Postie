@@ -35,10 +35,17 @@ class HomeViewModel: ObservableObject {
     @Published var downloadInfo: String = ""
     @Published var totalBytesKnown: Bool = false
     
+    // --- HISTORY ---
+    @Published var requestHistory: [RequestPreset] = []
+    
     let methods = ["GET", "POST", "PUT", "DELETE", "PATCH"]
     
     private var currentRequestTask: Task<Void, Never>?
     private var currentDownloadTask: Task<Void, Never>?
+    
+    init() {
+        self.requestHistory = HistoryService.load().sorted(by: { $0.timestamp > $1.timestamp })
+    }
     
     // --- MAIN ACTION: SEND REAL REQUEST ---
     @discardableResult
@@ -74,6 +81,7 @@ class HomeViewModel: ObservableObject {
                 // 4. Cek cancellation: Jangan update UI kalau task ini sudah dibatalkan
                 if !Task.isCancelled {
                     self.response = result
+                    addRequestToHistory()
                 }
             } catch {
                 if !Task.isCancelled {
@@ -142,6 +150,30 @@ class HomeViewModel: ObservableObject {
         } catch {
             self.errorMessage = error.localizedDescription
         }
+    }
+    
+    // --- HISTORY LOGIC ---
+    @MainActor
+    func addRequestToHistory() {
+        let preset = RequestPreset(
+            method: self.selectedMethod,
+            url: self.urlString,
+            authToken: self.authToken,
+            rawHeaders: self.rawHeaders,
+            requestBody: self.requestBody
+        )
+        
+        self.requestHistory = HistoryService.add(request: preset, to: self.requestHistory)
+        HistoryService.save(history: self.requestHistory)
+    }
+    
+    @MainActor
+    func loadRequestFromHistory(request: RequestPreset) {
+        self.selectedMethod = request.method
+        self.urlString = request.url
+        self.authToken = request.authToken
+        self.rawHeaders = request.rawHeaders
+        self.requestBody = request.requestBody
     }
     
     // --- DOWNLOAD ACTION ---
