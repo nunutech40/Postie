@@ -35,10 +35,17 @@ class HomeViewModel: ObservableObject {
     @Published var downloadInfo: String = ""
     @Published var totalBytesKnown: Bool = false
     
+    // --- HISTORY ---
+    @Published var requestHistory: [RequestPreset] = []
+    
     let methods = ["GET", "POST", "PUT", "DELETE", "PATCH"]
     
     private var currentRequestTask: Task<Void, Never>?
     private var currentDownloadTask: Task<Void, Never>?
+    
+    init() {
+        self.requestHistory = HistoryService.load().sorted(by: { $0.timestamp > $1.timestamp })
+    }
     
     // --- MAIN ACTION: SEND REAL REQUEST ---
     @discardableResult
@@ -74,9 +81,11 @@ class HomeViewModel: ObservableObject {
                 // 4. Cek cancellation: Jangan update UI kalau task ini sudah dibatalkan
                 if !Task.isCancelled {
                     self.response = result
+                    addRequestToHistory(wasSuccessful: true)
                 }
             } catch {
                 if !Task.isCancelled {
+                    addRequestToHistory(wasSuccessful: false)
                     self.errorMessage = error.localizedDescription
                 }
             }
@@ -113,7 +122,8 @@ class HomeViewModel: ObservableObject {
             url: self.urlString,
             authToken: self.authToken,
             rawHeaders: self.rawHeaders,
-            requestBody: self.requestBody
+            requestBody: self.requestBody,
+            wasSuccessful: true
         )
         
         // 3. Suruh PresetService simpan ke disk
@@ -142,6 +152,31 @@ class HomeViewModel: ObservableObject {
         } catch {
             self.errorMessage = error.localizedDescription
         }
+    }
+    
+    // --- HISTORY LOGIC ---
+    @MainActor
+    func addRequestToHistory(wasSuccessful: Bool) {
+        let preset = RequestPreset(
+            method: self.selectedMethod,
+            url: self.urlString,
+            authToken: self.authToken,
+            rawHeaders: self.rawHeaders,
+            requestBody: self.requestBody,
+            wasSuccessful: wasSuccessful
+        )
+        
+        self.requestHistory = HistoryService.add(request: preset, to: self.requestHistory)
+        HistoryService.save(history: self.requestHistory)
+    }
+    
+    @MainActor
+    func loadRequestFromHistory(request: RequestPreset) {
+        self.selectedMethod = request.method
+        self.urlString = request.url
+        self.authToken = request.authToken
+        self.rawHeaders = request.rawHeaders
+        self.requestBody = request.requestBody
     }
     
     // --- DOWNLOAD ACTION ---
@@ -179,5 +214,19 @@ class HomeViewModel: ObservableObject {
                 }
             }
         }
+    }
+    
+    // --- CANCELLATION LOGIC ---
+    @MainActor
+    func cancelRequest() {
+        currentRequestTask?.cancel()
+        self.isLoading = false
+    }
+    
+    @MainActor
+    func cancelDownload() {
+        currentDownloadTask?.cancel()
+        self.isDownloading = false
+        self.downloadInfo = "Download cancelled."
     }
 }

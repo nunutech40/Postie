@@ -144,6 +144,7 @@ struct ResponsePanel: View {
 // MARK: - Sidebar Components
 struct TargetSectionView: View {
     @ObservedObject var viewModel: HomeViewModel
+    @State private var showHistory = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -158,6 +159,18 @@ struct TargetSectionView: View {
                 
                 // Group Tombol dengan frame yang konsisten
                 HStack(spacing: 14) {
+                    Button(action: { showHistory = true }) {
+                        Image(systemName: "clock")
+                            .font(.system(size: 13, weight: .medium))
+                            .frame(width: 18, height: 18)
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundColor(.secondary)
+                    .help("Request History")
+                    .popover(isPresented: $showHistory, arrowEdge: .bottom) {
+                        HistoryView(viewModel: viewModel, showHistory: $showHistory)
+                    }
+                    
                     Button(action: { viewModel.loadPreset() }) {
                         Image(systemName: "folder")
                             .font(.system(size: 13, weight: .medium))
@@ -470,7 +483,7 @@ struct DownloadProgressView: View {
                 
                 // Tombol Cancel (Optional tapi Pro)
                 Button("Cancel") {
-                    // viewModel.cancelDownload()
+                    viewModel.cancelDownload()
                 }
                 .buttonStyle(.link)
                 .foregroundColor(.red)
@@ -496,3 +509,4 @@ struct DownloadProgressView: View {
         .padding()
     }
 }
+

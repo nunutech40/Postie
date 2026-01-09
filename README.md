@@ -35,6 +35,9 @@ Pendekatan ini memastikan aplikasi tetap **ringan, cepat, dan stabil** bahkan sa
 - **Preset System**  
   Simpan dan buka konfigurasi request dalam format `.json` yang portabel.
 
+- **Request History**  
+  10 request terakhir (sukses maupun gagal) disimpan secara otomatis. Akses melalui ikon jam, di mana request yang gagal akan ditandai secara visual (abu-abu) untuk identifikasi cepat.
+
 - **Smart Error Mapping**  
   Error teknis dipetakan menjadi pesan manusiawi (Timeout, No Internet, Invalid URL).
 
@@ -135,8 +138,7 @@ Model ini memastikan:
 
 ## 📥 Smart Streaming Download Engine
 
-Fitur ini dirancang untuk melakukan **pengujian throughput jaringan** dan **unduhan file besar**
-tanpa mengorbankan stabilitas memori aplikasi.
+Fitur ini dirancang untuk melakukan **pengujian throughput jaringan** dan **unduhan file besar**. **Data yang diunduh diproses secara real-time untuk mendapatkan metrik performa dan memperbarui progress, namun tidak disimpan ke disk** untuk menjaga stabilitas memori aplikasi dan fokus pada fungsi pengujian.
 
 Pendekatan ini memastikan Postie tetap **responsif, efisien, dan aman** meskipun memproses data berukuran besar.
 
@@ -148,8 +150,7 @@ Postie **tidak menggunakan pendekatan download-to-memory konvensional**.
 Sebaliknya, fitur ini dibangun di atas fondasi berikut:
 
 - **AsyncStream (Swift Concurrency)**  
-  Mengelola aliran data asinkron dan memungkinkan pengiriman update status ke UI
-  secara berkelanjutan tanpa memblokir thread utama.
+  Mengelola aliran data asinkron dan memungkinkan pengiriman update status ke UI secara berkelanjutan dengan **mekanisme throttling yang efisien**, mencegah pemblokiran thread utama.
 
 - **URLSession.bytes(from:)**  
   Menggunakan API low-level untuk membaca data sebagai **stream byte**
@@ -178,14 +179,26 @@ flowchart TD
     F --> G[Mulai Byte Streaming]
     G --> H[Iterasi byte menggunakan AsyncStream]
     H --> I[Hitung total byte diterima]
-    I --> J[Yield progress ke ViewModel]
+    I --> J[Yield progress ke ViewModel (dengan throttling update: 1% untuk determinate, 1MB untuk indeterminate)]
     J --> K[Update ProgressView via MainActor]
     K --> L{Download selesai atau Cancel?}
     L -- Selesai --> M[Stream ditutup otomatis]
     L -- Cancel --> N[Task.cancel dan hentikan stream]
 ```
 
+## 🧪 Contoh Pengujian Download
 
+Untuk menguji fungsionalitas download, Anda bisa menggunakan link publik berikut yang telah diverifikasi.
+
+### 1. File Kecil (Tes Keberhasilan)
+Gunakan link ini untuk memverifikasi bahwa download berjalan sampai selesai.
+- **10 MB:** `http://212.183.159.230/10MB.zip`
+
+### 2. File Besar (Tes Pembatalan/Cancel)
+Gunakan file besar ini untuk memulai download, lalu tekan tombol **Cancel** untuk memastikan proses berhenti dan sumber daya dibebaskan.
+- **200 MB:** `http://212.183.159.230/200MB.zip`
+
+---
 
 ## 🧪 Logic-Driven Unit Testing
 
