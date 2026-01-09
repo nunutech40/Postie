@@ -180,4 +180,18 @@ class HomeViewModel: ObservableObject {
             }
         }
     }
+    
+    // --- CANCELLATION LOGIC ---
+    @MainActor
+    func cancelRequest() {
+        currentRequestTask?.cancel()
+        self.isLoading = false
+    }
+    
+    @MainActor
+    func cancelDownload() {
+        currentDownloadTask?.cancel()
+        self.isDownloading = false
+        self.downloadInfo = "Download cancelled."
+    }
 }

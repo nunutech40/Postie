@@ -146,6 +146,9 @@ struct NetworkService {
     
     /// **Algorithm: Stream-based Download**
     /// Membuka pipa data asinkron untuk memantau trafik download secara real-time.
+    /// **OPTIMIZATION**: Update progres di-throttle untuk menghindari CPU overhead dan UI lag.
+    /// - Determinate: Update dikirim setiap kenaikan 1%.
+    /// - Indeterminate: Update dikirim setiap 1 MB.
     static func downloadWithProgress(url: URL) -> AsyncStream<DownloadUpdate> {
         AsyncStream { continuation in
             let task = Task {
@@ -153,37 +156,59 @@ struct NetworkService {
                     // 1. Inisialisasi Stream dari URLSession
                     let (bytes, response) = try await customSession.bytes(from: url)
                     
-                    // 2. Metadata: Cek apakah server ngasih tau total ukuran file
+                    // 2. Metadata
                     let totalBytes = Double(response.expectedContentLength)
                     var bytesReceived = 0.0
                     
-                    // 3. Iterasi tiap chunk byte yang masuk
-                    for try await byte in bytes {
+                    // Variabel untuk throttling
+                    var lastYieldedProgress = -1.0
+                    let reportingIncrement = 0.01 // 1%
+                    var bytesSinceLastYield = 0
+                    let indeterminateReportingChunk = 1024 * 1024 // 1 MB
+
+                    // 3. Iterasi byte-stream dengan throttling
+                    for try await _ in bytes {
                         bytesReceived += 1
                         
                         if totalBytes > 0 {
                             // KASUS A: Determinate (Ada Progress Bar)
                             let progress = bytesReceived / totalBytes
-                            let info = "\(formatBytes(bytesReceived)) / \(formatBytes(totalBytes))"
-                            continuation.yield(.progress(progress, info))
+                            if progress >= lastYieldedProgress + reportingIncrement {
+                                let info = "\(formatBytes(bytesReceived)) / \(formatBytes(totalBytes))"
+                                continuation.yield(.progress(progress, info))
+                                lastYieldedProgress = progress
+                            }
                         } else {
                             // KASUS B: Indeterminate (Hanya angka yang nambah)
-                            let info = "\(formatBytes(bytesReceived)) downloaded"
-                            continuation.yield(.indeterminate(info))
+                            bytesSinceLastYield += 1
+                            if bytesSinceLastYield >= indeterminateReportingChunk {
+                                let info = "\(formatBytes(bytesReceived)) downloaded"
+                                continuation.yield(.indeterminate(info))
+                                bytesSinceLastYield = 0
+                            }
                         }
+                    }
+                    
+                    // Pastikan update terakhir (100%) dikirim
+                    if totalBytes > 0 {
+                        let info = "\(formatBytes(totalBytes)) / \(formatBytes(totalBytes))"
+                        continuation.yield(.progress(1.0, info))
                     }
                     
                     continuation.yield(.finished)
                     continuation.finish()
                     
                 } catch {
-                    continuation.yield(.error(error.localizedDescription))
+                    // Jangan kirim error jika task dibatalkan oleh user
+                    if !(error is CancellationError) {
+                        continuation.yield(.error(error.localizedDescription))
+                    }
                     continuation.finish()
                 }
             }
             
             // Handle jika user membatalkan request dari UI
-            continuation.onTermination = { _ in
+            continuation.onTermination = { @Sendable _ in
                 task.cancel()
             }
         }
