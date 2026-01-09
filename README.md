@@ -35,6 +35,9 @@ Pendekatan ini memastikan aplikasi tetap **ringan, cepat, dan stabil** bahkan sa
 - **Preset System**  
   Simpan dan buka konfigurasi request dalam format `.json` yang portabel.
 
+- **Request History**  
+  10 request terakhir (sukses maupun gagal) disimpan secara otomatis. Akses melalui ikon jam, di mana request yang gagal akan ditandai secara visual (abu-abu) untuk identifikasi cepat.
+
 - **Smart Error Mapping**  
   Error teknis dipetakan menjadi pesan manusiawi (Timeout, No Internet, Invalid URL).
 
