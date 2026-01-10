@@ -44,10 +44,10 @@ Fitur-fitur ini dapat dipertimbangkan untuk pembaruan selanjutnya, lebih meningk
 
 ### 5. Koleksi/Pengelompokan Request dalam Aplikasi
 
--   [ ] **Mengapa:** Mengatur request ke dalam grup atau folder logis (misalnya, "User API", "Product API") di dalam aplikasi itu sendiri, daripada hanya sebagai file individual, mengubah Postie menjadi alat manajemen proyek yang lebih kuat untuk pengujian API.
--   [ ] **Implementasi:**
-    -   [ ] Terapkan model data untuk `Collection` (nama, array referensi `RequestPreset`).
-    -   [ ] Kembangkan UI khusus untuk mengelola koleksi di sidebar atau tampilan terpisah.
+-   [x] **Mengapa:** Mengatur request ke dalam grup atau folder logis (misalnya, "User API", "Product API") di dalam aplikasi itu sendiri, daripada hanya sebagai file individual, mengubah Postie menjadi alat manajemen proyek yang lebih kuat untuk pengujian API.
+-   [x] **Implementasi:**
+    -   [x] Terapkan model data untuk `Collection` (nama, array referensi `RequestPreset`).
+    -   [x] Kembangkan UI khusus untuk mengelola koleksi di sidebar atau tampilan terpisah.
 
 ### 6. Render Respon yang Ditingkatkan (HTML, Gambar)
 

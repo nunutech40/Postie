@@ -44,9 +44,18 @@ Pendekatan ini memastikan aplikasi tetap **ringan, cepat, dan stabil** bahkan sa
 - **Smart Error Mapping**  
   Error teknis dipetakan menjadi pesan manusiawi (Timeout, No Internet, Invalid URL).
 
+- **Manajemen Koleksi (Request Collections)**
+  Organisir request API Anda ke dalam koleksi yang dapat disimpan dan dimuat.
+  - **Dua-Sidebar Layout:** Navigasi mudah dengan daftar koleksi di kiri dan detail request di kanan.
+  - **Aksi Koleksi:** Tambah koleksi baru (dengan input nama via popup & cek duplikasi), ganti nama, hapus koleksi (dengan konfirmasi).
+  - **Aksi Request dalam Koleksi:** Tambahkan request yang sedang aktif ke koleksi (dengan deteksi duplikasi & notifikasi toast), muat request ke editor utama, hapus request (dengan tombol delete & swipe-to-delete).
+  - **Visualisasi:** Metode request ditandai dengan warna berbeda untuk identifikasi cepat (GET: Hijau, POST: Biru, PUT: Oranye, PATCH: Ungu, DELETE: Merah).
+  - **Persistensi:** Simpan dan muat seluruh koleksi sebagai satu file.
+
 ---
 
 ## 🏗️ Arsitektur & Teknologi  
+
 
 Postie dibangun dengan pola **MVVM + Service Layer** yang terpisah jelas, memastikan kode mudah dirawat, diuji, dan dikembangkan.
 
