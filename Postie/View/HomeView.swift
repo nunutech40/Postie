@@ -13,6 +13,7 @@ struct HomeView: View {
     
     // 1. STATE BUAT BUKA SETTINGS
     @State private var showSettings = false
+    @State private var isShowingCollectionView = false
     
     var body: some View {
         HStack(spacing: 0) {
@@ -31,6 +32,16 @@ struct HomeView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button(action: {
+                    isShowingCollectionView = true
+                }) {
+                    Image(systemName: "folder.badge.plus")
+                        .foregroundColor(.secondary)
+                }
+                .help("Collection") // Tooltip pas di hover mouse
+            }
+            
+            ToolbarItem(placement: .primaryAction) {
+                Button(action: {
                     showSettings = true
                 }) {
                     Image(systemName: "gearshape.fill")
@@ -38,6 +49,9 @@ struct HomeView: View {
                 }
                 .help("Settings & Guide") // Tooltip pas di hover mouse
             }
+        }
+        .sheet(isPresented: $isShowingCollectionView) {
+            CollectionView(viewModel: viewModel)
         }
         // 3. SHEET PEMANGGIL SETTINGS
         .sheet(isPresented: $showSettings) {

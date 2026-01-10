@@ -38,6 +38,13 @@ class HomeViewModel: ObservableObject {
     // --- HISTORY ---
     @Published var requestHistory: [RequestPreset] = []
     
+    // --- COLLECTION ---
+    @Published var requestCollection: RequestCollection = RequestCollection(name: "New Collection", requests: [])
+    
+    // --- TOAST ---
+    @Published var showToast = false
+    @Published var toastMessage = ""
+    
     // --- ENVIRONMENT ---
     @Published var environments: [PostieEnvironment] = []
     @Published var selectedEnvironmentID: UUID?
@@ -137,6 +144,14 @@ class HomeViewModel: ObservableObject {
         return dict
     }
     
+    func showToast(message: String) {
+        self.toastMessage = message
+        self.showToast = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            self.showToast = false
+        }
+    }
+    
     // --- CLEAN PRESET LOGIC ---
     
     @MainActor
@@ -216,6 +231,62 @@ class HomeViewModel: ObservableObject {
             requestBody: self.requestBody
         )
         RequestCacheService.save(request: requestToCache)
+    }
+    
+    // --- COLLECTION LOGIC ---
+    @MainActor
+    func loadCollection() {
+        guard let url = FileService.getOpenURL() else { return }
+        
+        do {
+            let collection = try CollectionService.load(from: url)
+            self.requestCollection = collection
+        } catch {
+            self.errorMessage = error.localizedDescription
+        }
+    }
+    
+    @MainActor
+    func saveCollection() {
+        guard let url = FileService.getSaveURL() else { return }
+        
+        do {
+            try CollectionService.save(collection: self.requestCollection, to: url)
+        } catch {
+            self.errorMessage = error.localizedDescription
+        }
+    }
+    
+    @MainActor
+    func addCurrentRequestToCollection() {
+        let preset = RequestPreset(
+            method: self.selectedMethod,
+            url: self.urlString,
+            authToken: self.authToken,
+            rawHeaders: self.rawHeaders,
+            requestBody: self.requestBody
+        )
+        
+        if requestCollection.requests.contains(preset) {
+            showToast(message: "Request already in collection")
+        } else {
+            self.requestCollection.requests.append(preset)
+            showToast(message: "Request Added")
+        }
+    }
+    
+    @MainActor
+    func deleteRequestFromCollection(at offsets: IndexSet) {
+        self.requestCollection.requests.remove(atOffsets: offsets)
+    }
+    
+    @MainActor
+    func loadRequestFromCollection(request: RequestPreset) {
+        self.selectedMethod = request.method
+        self.urlString = request.url
+        self.authToken = request.authToken
+        self.rawHeaders = request.rawHeaders
+        self.requestBody = request.requestBody
     }
     
     // --- DOWNLOAD ACTION ---
