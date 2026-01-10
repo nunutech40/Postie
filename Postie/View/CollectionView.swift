@@ -17,6 +17,9 @@ struct CollectionView: View {
         } detail: {
             detailContent
         }
+        .onAppear {
+            viewModel.initializeCollections()
+        }
         .frame(minWidth: 700, minHeight: 400)
         .overlay(toastOverlay, alignment: .bottom)
     }
@@ -29,14 +32,14 @@ struct CollectionView: View {
                     CollectionListItemView(collection: $collection, viewModel: viewModel)
                         .tag(collection.id)
                 }
-                .onDelete(perform: viewModel.deleteCollection)
             }
+            // Removed .onDelete(perform: viewModel.deleteCollection) from here
             
             Divider()
             
             HStack {
                 Button(action: {
-                    viewModel.addNewCollection()
+                    viewModel.showAddCollectionAlert()
                 }) {
                     Image(systemName: "plus")
                 }
@@ -47,6 +50,32 @@ struct CollectionView: View {
                 Spacer()
             }
             .padding(.vertical, 8)
+        }
+        .alert("New Collection", isPresented: $viewModel.showingNewCollectionAlert) {
+            TextField("Collection Name", text: $viewModel.newCollectionName)
+            Button("Create") {
+                viewModel.createCollection(name: viewModel.newCollectionName)
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("Enter a name for your new collection.")
+        }
+        .alert("Delete Collection", isPresented: $viewModel.showingDeleteCollectionAlert) {
+            Button("Delete", role: .destructive) {
+                viewModel.performDeleteCollection()
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("Are you sure you want to delete '\(viewModel.collections.first(where: {$0.id == viewModel.collectionToDeleteID})?.name ?? "this collection")'? This action cannot be undone.")
+        }
+        .alert("Rename Collection", isPresented: $viewModel.showingRenameCollectionAlert) {
+            TextField("Collection Name", text: $viewModel.newCollectionEditedName)
+            Button("Rename") {
+                viewModel.performRenameCollection()
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("Enter a new name for the collection.")
         }
     }
 
@@ -59,7 +88,7 @@ struct CollectionView: View {
                 } else {
                     List {
                         ForEach(selectedCollection.requests) { request in
-                            RequestRowView(request: request, viewModel: viewModel, dismiss: _dismiss)
+                            RequestRowView(request: request, viewModel: viewModel)
                         }
                         .onDelete(perform: viewModel.deleteRequestFromCollection)
                     }

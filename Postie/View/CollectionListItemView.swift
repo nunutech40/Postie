@@ -8,21 +8,26 @@
 import SwiftUI
 
 struct CollectionListItemView: View {
-    @Binding var collection: RequestCollection
-    @ObservedObject var viewModel: HomeViewModel // ViewModel to access editingCollectionID
+    @Binding var collection: RequestCollection // Change to Binding
+    @ObservedObject var viewModel: HomeViewModel // ViewModel to access confirmation/rename functions
 
     var body: some View {
-        if viewModel.editingCollectionID == collection.id {
-            TextField("Collection Name", text: $collection.name)
-                .textFieldStyle(.plain)
-                .onSubmit {
-                    viewModel.editingCollectionID = nil
-                }
-        } else {
+        HStack {
             Text(collection.name)
-                .onTapGesture(count: 2) {
-                    viewModel.editingCollectionID = collection.id
+            Spacer()
+            // Three-dot button for actions
+            Button(action: {}) {
+                Image(systemName: "ellipsis.circle")
+            }
+            .buttonStyle(.plain)
+            .contextMenu {
+                Button("Rename") {
+                    viewModel.confirmRenameCollection(id: collection.id)
                 }
+                Button("Delete", role: .destructive) {
+                    viewModel.confirmDeleteCollection(id: collection.id)
+                }
+            }
         }
     }
 }
