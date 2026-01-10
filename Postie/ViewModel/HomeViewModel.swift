@@ -58,12 +58,22 @@ class HomeViewModel: ObservableObject {
         if self.selectedEnvironmentID == nil {
             self.selectedEnvironmentID = self.environments.first?.id
         }
+
+        if let cachedRequest = RequestCacheService.load() {
+            self.selectedMethod = cachedRequest.method
+            self.urlString = cachedRequest.url
+            self.authToken = cachedRequest.authToken
+            self.rawHeaders = cachedRequest.rawHeaders
+            self.requestBody = cachedRequest.requestBody
+        }
     }
     
     // --- MAIN ACTION: SEND REAL REQUEST ---
     @discardableResult
     @MainActor
     func runRealRequest() -> Task<Void, Never> {
+        saveRequestToCache()
+        
         // 1. Batalkan request yang masih jalan sebelum bikin yang baru
         currentRequestTask?.cancel()
         
@@ -196,10 +206,23 @@ class HomeViewModel: ObservableObject {
         self.rawHeaders = request.rawHeaders
         self.requestBody = request.requestBody
     }
+
+    private func saveRequestToCache() {
+        let requestToCache = RequestPreset(
+            method: self.selectedMethod,
+            url: self.urlString,
+            authToken: self.authToken,
+            rawHeaders: self.rawHeaders,
+            requestBody: self.requestBody
+        )
+        RequestCacheService.save(request: requestToCache)
+    }
     
     // --- DOWNLOAD ACTION ---
     @MainActor
     func runDownload() {
+        saveRequestToCache()
+        
         currentDownloadTask?.cancel()
         
         currentDownloadTask = Task {
