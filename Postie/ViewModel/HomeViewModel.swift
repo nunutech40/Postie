@@ -89,8 +89,9 @@ class HomeViewModel: ObservableObject {
     
     @MainActor
     func initializeCollections() {
-        // Load collections from a file or initialize with a default
-        if collections.isEmpty {
+        self.collections = CollectionService.loadAuto() // Attempt to load saved collections first
+        
+        if collections.isEmpty { // If no collections were loaded, create a default
             self.collections = [
                 RequestCollection(name: "My Collection", requests: [])
             ]
@@ -279,6 +280,7 @@ class HomeViewModel: ObservableObject {
             let loadedCollections = try CollectionService.load(from: url)
             self.collections = loadedCollections
             selectFirstCollection()
+            // No auto-save here, as this is a user-initiated load. Auto-save will happen on modifications.
         } catch {
             self.errorMessage = error.localizedDescription
         }
@@ -291,6 +293,7 @@ class HomeViewModel: ObservableObject {
         do {
             try CollectionService.save(collections: self.collections, to: url)
             showToast(message: "Collections Saved")
+            // No auto-save here, as this is a user-initiated save. Auto-save is handled internally.
         } catch {
             self.errorMessage = error.localizedDescription
         }
@@ -316,6 +319,7 @@ class HomeViewModel: ObservableObject {
         self.collections.append(newCollection)
         self.selectedCollectionID = newCollection.id
         self.editingCollectionID = newCollection.id // No longer needed for explicit TextField, but can be used for initial state.
+        CollectionService.saveAuto(collections: collections) // AUTO-SAVE
     }
     
     @MainActor
@@ -330,6 +334,7 @@ class HomeViewModel: ObservableObject {
         self.collections.removeAll(where: { $0.id == id })
         self.collectionToDeleteID = nil
         selectFirstCollection()
+        CollectionService.saveAuto(collections: collections) // AUTO-SAVE
     }
     
     @MainActor
@@ -358,6 +363,7 @@ class HomeViewModel: ObservableObject {
         self.collectionToRenameID = nil
         self.newCollectionEditedName = ""
         showToast(message: "Collection Renamed")
+        CollectionService.saveAuto(collections: collections) // AUTO-SAVE
     }
     
     @MainActor
@@ -380,6 +386,7 @@ class HomeViewModel: ObservableObject {
         } else {
             self.collections[index].requests.append(preset)
             showToast(message: "Request Added")
+            CollectionService.saveAuto(collections: collections) // AUTO-SAVE
         }
     }
     
@@ -396,12 +403,14 @@ class HomeViewModel: ObservableObject {
     func deleteRequestFromCollection(id: UUID) {
         guard let collectionIndex = selectedCollectionIndex else { return }
         collections[collectionIndex].requests.removeAll(where: { $0.id == id })
+        CollectionService.saveAuto(collections: collections) // AUTO-SAVE
     }
     
     @MainActor
     func deleteRequestFromCollection(at offsets: IndexSet) {
         guard let collectionIndex = selectedCollectionIndex else { return }
         collections[collectionIndex].requests.remove(atOffsets: offsets)
+        CollectionService.saveAuto(collections: collections) // AUTO-SAVE
     }
     
     // --- DOWNLOAD ACTION ---
