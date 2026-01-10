@@ -38,6 +38,9 @@ Pendekatan ini memastikan aplikasi tetap **ringan, cepat, dan stabil** bahkan sa
 - **Request History**  
   10 request terakhir (sukses maupun gagal) disimpan secara otomatis. Akses melalui ikon jam, di mana request yang gagal akan ditandai secara visual (abu-abu) untuk identifikasi cepat.
 
+- **Manajemen Environment & Variabel**  
+  Definisikan environment (misal: staging, production) dengan variabel kustom (seperti `{{baseURL}}` atau `{{token}}`). Beralih antar environment dengan cepat menggunakan dropdown untuk mengubah semua request Anda secara dinamis.
+
 - **Smart Error Mapping**  
   Error teknis dipetakan menjadi pesan manusiawi (Timeout, No Internet, Invalid URL).
 
@@ -79,6 +82,7 @@ Postie menerapkan **Stateless Service Architecture**, memastikan setiap request 
 | Tahap | Aktivitas Utama | Teknologi |
 |-----|----------------|-----------|
 | **Input** | User memasukkan URL, Method, Header, dan Body | SwiftUI View State |
+| **Pre-processing** | Substitusi variabel (contoh: `{{baseURL}}`) | HomeViewModel |
 | **Validation** | Trimming URL & validasi format | NetworkService |
 | **Execution** | Trigger request asinkron dengan kebijakan zero-cache | `URLSession` (Ephemeral) |
 | **Processing** | Hitung latensi (ms) & JSON pretty-print | `JSONSerialization` |
@@ -87,7 +91,8 @@ Postie menerapkan **Stateless Service Architecture**, memastikan setiap request 
 ```mermaid
 %%{init: {'themeVariables': { 'fontSize': '12px' }}}%%
 flowchart TD
-    A[User Input: URL, Method, Headers, Body] --> B[Validation Layer: Trim and Validate]
+    A[User Input: URL, Method, Headers, Body] --> PRE[Pre-processing: Ganti {{variabel}}]
+    PRE --> B[Validation Layer: Trim and Validate]
     B -->|Valid| C[Execute Request: URLSession Ephemeral]
     B -->|Invalid| X[Show Validation Error]
     C --> D[Measure Latency ms]

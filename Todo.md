@@ -24,11 +24,11 @@ Fitur-fitur ini penting untuk melengkapi fungsionalitas yang ada, meningkatkan a
 
 ### 3. Manajemen Environment & Variabel
 
--   [ ] **Mengapa:** Developer jarang bekerja dengan satu URL statis. Kemampuan untuk mendefinisikan dan beralih antara environment (development, staging, production) dan menggunakan variabel (misalnya, `{{baseUrl}}`, `{{authToken}}`) adalah landasan alur kerja pengujian API modern. Fitur ini secara drastis mengurangi perubahan manual dan potensi kesalahan.
--   [ ] **Implementasi:**
-    -   [ ] Definisikan struktur data untuk `Environment` (nama, pasangan key-value).
-    -   [ ] Buat UI pengaturan untuk mengelola environment dan variabel.
-    -   [ ] Terapkan langkah pra-pemrosesan request di `HomeViewModel` untuk mengganti variabel di URL, header, dan body sebelum `NetworkService.performRequest` dipanggil.
+-   [*] **Mengapa:** Developer jarang bekerja dengan satu URL statis. Kemampuan untuk mendefinisikan dan beralih antara environment (development, staging, production) dan menggunakan variabel (misalnya, `{{baseUrl}}`, `{{authToken}}`) adalah landasan alur kerja pengujian API modern. Fitur ini secara drastis mengurangi perubahan manual dan potensi kesalahan.
+-   [*] **Implementasi:**
+    -   [*] Definisikan struktur data untuk `Environment` (nama, pasangan key-value).
+    -   [*] Buat UI pengaturan untuk mengelola environment dan variabel.
+    -   [*] Terapkan langkah pra-pemrosesan request di `HomeViewModel` untuk mengganti variabel di URL, header, dan body sebelum `NetworkService.performRequest` dipanggil.
 
 ---
 

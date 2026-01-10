@@ -111,7 +111,8 @@ struct NetworkService {
                 statusCode: httpResponse.statusCode,
                 latency: latencyMs,
                 headers: responseHeaders,
-                body: prettyPrintJSON(responseString)
+                body: prettyPrintJSON(responseString),
+                rawData: data
             )
             
         } catch let error as URLError {

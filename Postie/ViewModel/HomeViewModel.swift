@@ -38,6 +38,15 @@ class HomeViewModel: ObservableObject {
     // --- HISTORY ---
     @Published var requestHistory: [RequestPreset] = []
     
+    // --- ENVIRONMENT ---
+    @Published var environments: [PostieEnvironment] = []
+    @Published var selectedEnvironmentID: UUID?
+
+    var selectedEnvironment: PostieEnvironment? {
+        guard let selectedID = selectedEnvironmentID else { return nil }
+        return environments.first { $0.id == selectedID }
+    }
+    
     let methods = ["GET", "POST", "PUT", "DELETE", "PATCH"]
     
     private var currentRequestTask: Task<Void, Never>?
@@ -45,12 +54,26 @@ class HomeViewModel: ObservableObject {
     
     init() {
         self.requestHistory = HistoryService.load().sorted(by: { $0.timestamp > $1.timestamp })
+        self.environments = EnvironmentService.load()
+        if self.selectedEnvironmentID == nil {
+            self.selectedEnvironmentID = self.environments.first?.id
+        }
+
+        if let cachedRequest = RequestCacheService.load() {
+            self.selectedMethod = cachedRequest.method
+            self.urlString = cachedRequest.url
+            self.authToken = cachedRequest.authToken
+            self.rawHeaders = cachedRequest.rawHeaders
+            self.requestBody = cachedRequest.requestBody
+        }
     }
     
     // --- MAIN ACTION: SEND REAL REQUEST ---
     @discardableResult
     @MainActor
     func runRealRequest() -> Task<Void, Never> {
+        saveRequestToCache()
+        
         // 1. Batalkan request yang masih jalan sebelum bikin yang baru
         currentRequestTask?.cancel()
         
@@ -67,15 +90,20 @@ class HomeViewModel: ObservableObject {
             }
             
             do {
-                let headers = parseHeaders(rawText: rawHeaders)
-                let finalHeaders = !authToken.isEmpty ?
-                headers.merging(["Authorization": "Bearer \(authToken)"]) { (_, new) in new } : headers
+                let finalURL = substituteVariables(in: urlString)
+                let finalAuthToken = substituteVariables(in: authToken)
+                let finalRawHeaders = substituteVariables(in: rawHeaders)
+                let finalRequestBody = substituteVariables(in: requestBody)
+                
+                let headers = parseHeaders(rawText: finalRawHeaders)
+                let finalHeaders = !finalAuthToken.isEmpty ?
+                headers.merging(["Authorization": "Bearer \(finalAuthToken)"]) { (_, new) in new } : headers
                 
                 let result = try await NetworkService.performRequest(
-                    url: urlString,
+                    url: finalURL,
                     method: selectedMethod,
                     headers: finalHeaders,
-                    body: requestBody
+                    body: finalRequestBody
                 )
                 
                 // 4. Cek cancellation: Jangan update UI kalau task ini sudah dibatalkan
@@ -178,14 +206,28 @@ class HomeViewModel: ObservableObject {
         self.rawHeaders = request.rawHeaders
         self.requestBody = request.requestBody
     }
+
+    private func saveRequestToCache() {
+        let requestToCache = RequestPreset(
+            method: self.selectedMethod,
+            url: self.urlString,
+            authToken: self.authToken,
+            rawHeaders: self.rawHeaders,
+            requestBody: self.requestBody
+        )
+        RequestCacheService.save(request: requestToCache)
+    }
     
     // --- DOWNLOAD ACTION ---
     @MainActor
     func runDownload() {
+        saveRequestToCache()
+        
         currentDownloadTask?.cancel()
         
         currentDownloadTask = Task {
-            guard let url = URL(string: urlString.trimmingCharacters(in: .whitespacesAndNewlines)) else {
+            let finalURL = substituteVariables(in: urlString)
+            guard let url = URL(string: finalURL.trimmingCharacters(in: .whitespacesAndNewlines)) else {
                 self.errorMessage = "URL Invalid"
                 return
             }
@@ -228,5 +270,44 @@ class HomeViewModel: ObservableObject {
         currentDownloadTask?.cancel()
         self.isDownloading = false
         self.downloadInfo = "Download cancelled."
+    }
+    
+    // --- ENVIRONMENT LOGIC ---
+    @MainActor
+    func addEnvironment(_ environment: PostieEnvironment) {
+        environments.append(environment)
+        forceSaveEnvironments()
+    }
+    
+    @MainActor
+    func updateEnvironment(_ environment: PostieEnvironment) {
+        if let index = environments.firstIndex(where: { $0.id == environment.id }) {
+            environments[index] = environment
+            forceSaveEnvironments()
+        }
+    }
+    
+    @MainActor
+    func deleteEnvironment(at offsets: IndexSet) {
+        environments.remove(atOffsets: offsets)
+        forceSaveEnvironments()
+    }
+    
+    func forceSaveEnvironments() {
+        EnvironmentService.save(environments: environments)
+        if selectedEnvironmentID == nil || !environments.contains(where: { $0.id == selectedEnvironmentID }) {
+            selectedEnvironmentID = environments.first?.id
+        }
+    }
+    
+    private func substituteVariables(in string: String) -> String {
+        guard let environment = selectedEnvironment else { return string }
+        
+        var result = string
+        for (key, value) in environment.variables {
+            result = result.replacingOccurrences(of: "{{\(key)}}", with: value)
+        }
+        
+        return result
     }
 }

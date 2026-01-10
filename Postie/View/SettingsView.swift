@@ -9,6 +9,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(\.dismiss) var dismiss
+    @ObservedObject var viewModel: HomeViewModel
     
     var body: some View {
         TabView {
@@ -18,19 +19,25 @@ struct SettingsView: View {
                     Label("About", systemImage: "info.circle")
                 }
             
-            // TAB 2: GUIDE (Panduan)
+            // TAB 2: ENVIRONMENTS
+            EnvironmentView(viewModel: viewModel)
+                .tabItem {
+                    Label("Environments", systemImage: "server.rack")
+                }
+            
+            // TAB 3: GUIDE (Panduan)
             GuideView()
                 .tabItem {
                     Label("Guide", systemImage: "book.pages")
                 }
             
-            // TAB 3: SUPPORT
+            // TAB 4: SUPPORT
             SupportUsView()
                 .tabItem {
                     Label("Support", systemImage: "heart.fill")
                 }
         }
-        .frame(width: 500, height: 450) // Ukuran fix buat sheet settings
+        .frame(width: 600, height: 450) // Ukuran fix buat sheet settings
         .padding()
         // Tombol Close di pojok sheet
         .overlay(
@@ -43,5 +50,8 @@ struct SettingsView: View {
             .padding(),
             alignment: .topTrailing
         )
+        .onDisappear {
+            viewModel.forceSaveEnvironments()
+        }
     }
 }

@@ -41,7 +41,7 @@ struct HomeView: View {
         }
         // 3. SHEET PEMANGGIL SETTINGS
         .sheet(isPresented: $showSettings) {
-            SettingsView()
+            SettingsView(viewModel: viewModel)
         }
         .alert("Error", isPresented: Binding(
             get: { viewModel.errorMessage != nil },
@@ -111,7 +111,7 @@ struct ResponsePanel: View {
                     VStack(alignment: .leading, spacing: 0) {
                         ResponseHeaderView(response: response)
                         Divider()
-                        ResponseBodyView(content: generateMergedContent(from: response))
+                        ResponseRendererView(response: response) // <- Ganti di sini
                     }
                 }
                 // --- KASUS 3: KOSONG ---
@@ -121,25 +121,44 @@ struct ResponsePanel: View {
             }
         }
     }
-    
-    // Logic Penggabungan String
-    private func generateMergedContent(from response: APIResponse) -> String {
-        // Bungkus proses manipulasi String besar di sini
-        return autoreleasepool {
-            let headersString = response.headers
-                .sorted(by: <)
-                .map { "\($0.key): \($0.value)" }
-                .joined(separator: "\n")
-            
-            let finalContent = headersString + "\n\n" + response.body
-            return finalContent
-        }
-    }
 }
 
 // ==========================================
 // SUB-COMPONENTS (ATOMIC VIEWS)
 // ==========================================
+
+struct ResponseRendererView: View {
+    let response: APIResponse
+    
+    var body: some View {
+        // Ambil content type, default ke string kosong jika tidak ada
+        let contentType = response.headers["Content-Type"] ?? ""
+        
+        if contentType.contains("application/json") {
+            // Kasus 1: JSON (Pretty Print)
+            NativeTextView(text: response.body)
+        } else if contentType.contains("text/html") {
+            // Kasus 2: HTML
+            WebView(htmlString: response.body)
+        } else if contentType.starts(with: "image/") {
+            // Kasus 3: Gambar (PNG, JPEG, dll)
+            if let nsImage = NSImage(data: response.rawData) {
+                ScrollView {
+                    Image(nsImage: nsImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .padding()
+                }
+            } else {
+                // Fallback jika data gambar rusak
+                NativeTextView(text: "Failed to load image data.")
+            }
+        } else {
+            // Kasus 4: Fallback ke plain text
+            NativeTextView(text: response.body)
+        }
+    }
+}
 
 // MARK: - Sidebar Components
 struct TargetSectionView: View {
@@ -203,6 +222,15 @@ struct TargetSectionView: View {
                     .labelsHidden()
                     .frame(width: 90)
                     .pickerStyle(.menu)
+
+                    if !viewModel.environments.isEmpty {
+                        Picker("Environment", selection: $viewModel.selectedEnvironmentID) {
+                            ForEach(viewModel.environments) { env in
+                                Text(env.name).tag(env.id as UUID?)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                    }
                     
                     Spacer()
                 }
@@ -424,17 +452,6 @@ struct ResponseHeaderView: View {
 //        }
 //    }
 //}
-
-struct ResponseBodyView: View {
-    let content: String
-    
-    var body: some View {
-        // Ganti ScrollView + Text lama dengan ini:
-        NativeTextView(text: content)
-            .background(Color(NSColor.controlBackgroundColor))
-            // Gak perlu padding() di sini karena NSTextView udah punya margin internal
-    }
-}
 
 struct EmptyStateView: View {
     var body: some View {
