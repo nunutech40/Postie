@@ -77,15 +77,6 @@ class HomeViewModel: ObservableObject {
         if self.selectedEnvironmentID == nil {
             self.selectedEnvironmentID = self.environments.first?.id
         }
-        
-        // Load collections from a file or initialize with a default
-        // For now, let's start with a default for testing
-        if collections.isEmpty {
-            self.collections = [
-                RequestCollection(name: "My Collection", requests: [])
-            ]
-        }
-        selectFirstCollection()
 
         if let cachedRequest = RequestCacheService.load() {
             self.selectedMethod = cachedRequest.method
@@ -94,6 +85,17 @@ class HomeViewModel: ObservableObject {
             self.rawHeaders = cachedRequest.rawHeaders
             self.requestBody = cachedRequest.requestBody
         }
+    }
+    
+    @MainActor
+    func initializeCollections() {
+        // Load collections from a file or initialize with a default
+        if collections.isEmpty {
+            self.collections = [
+                RequestCollection(name: "My Collection", requests: [])
+            ]
+        }
+        selectFirstCollection()
     }
     
     func selectFirstCollection() {
@@ -261,12 +263,19 @@ class HomeViewModel: ObservableObject {
     }
     
     // --- COLLECTION LOGIC ---
+    @Published var showingNewCollectionAlert = false
+    @Published var newCollectionName = ""
+    @Published var showingDeleteCollectionAlert = false
+    @Published var collectionToDeleteID: UUID?
+    @Published var showingRenameCollectionAlert = false
+    @Published var collectionToRenameID: UUID?
+    @Published var newCollectionEditedName = ""
+
     @MainActor
     func loadCollections() {
         guard let url = FileService.getOpenURL() else { return }
         
         do {
-            // This will require CollectionService.load to be updated
             let loadedCollections = try CollectionService.load(from: url)
             self.collections = loadedCollections
             selectFirstCollection()
@@ -280,7 +289,6 @@ class HomeViewModel: ObservableObject {
         guard let url = FileService.getSaveURL() else { return }
         
         do {
-            // This will require CollectionService.save to be updated
             try CollectionService.save(collections: self.collections, to: url)
             showToast(message: "Collections Saved")
         } catch {
@@ -289,17 +297,67 @@ class HomeViewModel: ObservableObject {
     }
     
     @MainActor
-    func addNewCollection() {
-        let newCollection = RequestCollection(name: "New Collection", requests: [])
+    func showAddCollectionAlert() {
+        self.newCollectionName = "" // Clear previous input
+        self.showingNewCollectionAlert = true
+    }
+
+    @MainActor
+    func createCollection(name: String) {
+        if name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            self.errorMessage = "Collection name cannot be empty."
+            return
+        }
+        if collections.contains(where: { $0.name == name }) {
+            self.errorMessage = "Collection with this name already exists."
+            return
+        }
+        let newCollection = RequestCollection(name: name, requests: [])
         self.collections.append(newCollection)
         self.selectedCollectionID = newCollection.id
-        self.editingCollectionID = newCollection.id
+        self.editingCollectionID = newCollection.id // No longer needed for explicit TextField, but can be used for initial state.
     }
     
     @MainActor
-    func deleteCollection(at offsets: IndexSet) {
-        self.collections.remove(atOffsets: offsets)
+    func confirmDeleteCollection(id: UUID) {
+        self.collectionToDeleteID = id
+        self.showingDeleteCollectionAlert = true
+    }
+    
+    @MainActor
+    func performDeleteCollection() {
+        guard let id = collectionToDeleteID else { return }
+        self.collections.removeAll(where: { $0.id == id })
+        self.collectionToDeleteID = nil
         selectFirstCollection()
+    }
+    
+    @MainActor
+    func confirmRenameCollection(id: UUID) {
+        self.collectionToRenameID = id
+        if let collection = collections.first(where: { $0.id == id }) {
+            self.newCollectionEditedName = collection.name
+        }
+        self.showingRenameCollectionAlert = true
+    }
+    
+    @MainActor
+    func performRenameCollection() {
+        guard let id = collectionToRenameID else { return }
+        if newCollectionEditedName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            self.errorMessage = "Collection name cannot be empty."
+            return
+        }
+        if collections.contains(where: { $0.name == newCollectionEditedName && $0.id != id }) {
+            self.errorMessage = "Collection with this name already exists."
+            return
+        }
+        if let index = collections.firstIndex(where: { $0.id == id }) {
+            collections[index].name = newCollectionEditedName
+        }
+        self.collectionToRenameID = nil
+        self.newCollectionEditedName = ""
+        showToast(message: "Collection Renamed")
     }
     
     @MainActor
@@ -326,18 +384,24 @@ class HomeViewModel: ObservableObject {
     }
     
     @MainActor
-    func deleteRequestFromCollection(at offsets: IndexSet) {
-        guard let index = selectedCollectionIndex else { return }
-        self.collections[index].requests.remove(atOffsets: offsets)
-    }
-    
-    @MainActor
     func loadRequestFromCollection(request: RequestPreset) {
         self.selectedMethod = request.method
         self.urlString = request.url
         self.authToken = request.authToken
         self.rawHeaders = request.rawHeaders
         self.requestBody = request.requestBody
+    }
+    
+    @MainActor
+    func deleteRequestFromCollection(id: UUID) {
+        guard let collectionIndex = selectedCollectionIndex else { return }
+        collections[collectionIndex].requests.removeAll(where: { $0.id == id })
+    }
+    
+    @MainActor
+    func deleteRequestFromCollection(at offsets: IndexSet) {
+        guard let collectionIndex = selectedCollectionIndex else { return }
+        collections[collectionIndex].requests.remove(atOffsets: offsets)
     }
     
     // --- DOWNLOAD ACTION ---
