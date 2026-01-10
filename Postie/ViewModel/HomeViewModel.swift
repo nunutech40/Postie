@@ -326,9 +326,16 @@ class HomeViewModel: ObservableObject {
     }
     
     @MainActor
+    func deleteRequestFromCollection(id: UUID) {
+        guard let collectionIndex = selectedCollectionIndex else { return }
+        collections[collectionIndex].requests.removeAll(where: { $0.id == id })
+    }
+    
+    // Overloaded function for onDelete modifier which expects IndexSet
+    @MainActor
     func deleteRequestFromCollection(at offsets: IndexSet) {
-        guard let index = selectedCollectionIndex else { return }
-        self.collections[index].requests.remove(atOffsets: offsets)
+        guard let collectionIndex = selectedCollectionIndex else { return }
+        collections[collectionIndex].requests.remove(atOffsets: offsets)
     }
     
     @MainActor
