@@ -41,7 +41,7 @@ struct HomeView: View {
         }
         // 3. SHEET PEMANGGIL SETTINGS
         .sheet(isPresented: $showSettings) {
-            SettingsView()
+            SettingsView(viewModel: viewModel)
         }
         .alert("Error", isPresented: Binding(
             get: { viewModel.errorMessage != nil },
@@ -203,6 +203,15 @@ struct TargetSectionView: View {
                     .labelsHidden()
                     .frame(width: 90)
                     .pickerStyle(.menu)
+
+                    if !viewModel.environments.isEmpty {
+                        Picker("Environment", selection: $viewModel.selectedEnvironmentID) {
+                            ForEach(viewModel.environments) { env in
+                                Text(env.name).tag(env.id as UUID?)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                    }
                     
                     Spacer()
                 }
