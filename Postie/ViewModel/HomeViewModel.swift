@@ -38,6 +38,25 @@ class HomeViewModel: ObservableObject {
     // --- HISTORY ---
     @Published var requestHistory: [RequestPreset] = []
     
+    // --- COLLECTION ---
+    @Published var collections: [RequestCollection] = []
+    @Published var selectedCollectionID: UUID?
+    @Published var editingCollectionID: UUID?
+    
+    var selectedCollection: RequestCollection? {
+        guard let selectedID = selectedCollectionID else { return nil }
+        return collections.first { $0.id == selectedID }
+    }
+    
+    var selectedCollectionIndex: Int? {
+        guard let selectedID = selectedCollectionID else { return nil }
+        return collections.firstIndex { $0.id == selectedID }
+    }
+    
+    // --- TOAST ---
+    @Published var showToast = false
+    @Published var toastMessage = ""
+    
     // --- ENVIRONMENT ---
     @Published var environments: [PostieEnvironment] = []
     @Published var selectedEnvironmentID: UUID?
@@ -58,6 +77,15 @@ class HomeViewModel: ObservableObject {
         if self.selectedEnvironmentID == nil {
             self.selectedEnvironmentID = self.environments.first?.id
         }
+        
+        // Load collections from a file or initialize with a default
+        // For now, let's start with a default for testing
+        if collections.isEmpty {
+            self.collections = [
+                RequestCollection(name: "My Collection", requests: [])
+            ]
+        }
+        selectFirstCollection()
 
         if let cachedRequest = RequestCacheService.load() {
             self.selectedMethod = cachedRequest.method
@@ -65,6 +93,12 @@ class HomeViewModel: ObservableObject {
             self.authToken = cachedRequest.authToken
             self.rawHeaders = cachedRequest.rawHeaders
             self.requestBody = cachedRequest.requestBody
+        }
+    }
+    
+    func selectFirstCollection() {
+        if selectedCollectionID == nil {
+            selectedCollectionID = collections.first?.id
         }
     }
     
@@ -135,6 +169,14 @@ class HomeViewModel: ObservableObject {
             }
         }
         return dict
+    }
+    
+    func showToast(message: String) {
+        self.toastMessage = message
+        self.showToast = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            self.showToast = false
+        }
     }
     
     // --- CLEAN PRESET LOGIC ---
@@ -216,6 +258,86 @@ class HomeViewModel: ObservableObject {
             requestBody: self.requestBody
         )
         RequestCacheService.save(request: requestToCache)
+    }
+    
+    // --- COLLECTION LOGIC ---
+    @MainActor
+    func loadCollections() {
+        guard let url = FileService.getOpenURL() else { return }
+        
+        do {
+            // This will require CollectionService.load to be updated
+            let loadedCollections = try CollectionService.load(from: url)
+            self.collections = loadedCollections
+            selectFirstCollection()
+        } catch {
+            self.errorMessage = error.localizedDescription
+        }
+    }
+    
+    @MainActor
+    func saveCollections() {
+        guard let url = FileService.getSaveURL() else { return }
+        
+        do {
+            // This will require CollectionService.save to be updated
+            try CollectionService.save(collections: self.collections, to: url)
+            showToast(message: "Collections Saved")
+        } catch {
+            self.errorMessage = error.localizedDescription
+        }
+    }
+    
+    @MainActor
+    func addNewCollection() {
+        let newCollection = RequestCollection(name: "New Collection", requests: [])
+        self.collections.append(newCollection)
+        self.selectedCollectionID = newCollection.id
+        self.editingCollectionID = newCollection.id
+    }
+    
+    @MainActor
+    func deleteCollection(at offsets: IndexSet) {
+        self.collections.remove(atOffsets: offsets)
+        selectFirstCollection()
+    }
+    
+    @MainActor
+    func addCurrentRequestToCollection() {
+        guard let index = selectedCollectionIndex else {
+            showToast(message: "No Collection Selected")
+            return
+        }
+        
+        let preset = RequestPreset(
+            method: self.selectedMethod,
+            url: self.urlString,
+            authToken: self.authToken,
+            rawHeaders: self.rawHeaders,
+            requestBody: self.requestBody
+        )
+        
+        if collections[index].requests.contains(preset) {
+            showToast(message: "Request already in collection")
+        } else {
+            self.collections[index].requests.append(preset)
+            showToast(message: "Request Added")
+        }
+    }
+    
+    @MainActor
+    func deleteRequestFromCollection(at offsets: IndexSet) {
+        guard let index = selectedCollectionIndex else { return }
+        self.collections[index].requests.remove(atOffsets: offsets)
+    }
+    
+    @MainActor
+    func loadRequestFromCollection(request: RequestPreset) {
+        self.selectedMethod = request.method
+        self.urlString = request.url
+        self.authToken = request.authToken
+        self.rawHeaders = request.rawHeaders
+        self.requestBody = request.requestBody
     }
     
     // --- DOWNLOAD ACTION ---

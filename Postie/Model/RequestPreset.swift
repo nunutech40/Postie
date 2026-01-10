@@ -45,6 +45,10 @@ struct RequestPreset: Codable, Identifiable, Equatable {
     }
 
     static func == (lhs: RequestPreset, rhs: RequestPreset) -> Bool {
-        return lhs.id == rhs.id
+        return lhs.method == rhs.method &&
+            lhs.url == rhs.url &&
+            lhs.authToken == rhs.authToken &&
+            lhs.rawHeaders == rhs.rawHeaders &&
+            lhs.requestBody == rhs.requestBody
     }
 }
