@@ -9,15 +9,15 @@ import Foundation
 
 struct CollectionService {
     
-    static func save(collection: RequestCollection, to url: URL) throws {
+    static func save(collections: [RequestCollection], to url: URL) throws {
         let encoder = JSONEncoder()
         encoder.outputFormatting = .prettyPrinted
-        let data = try encoder.encode(collection)
+        let data = try encoder.encode(collections)
         try data.write(to: url)
     }
 
-    static func load(from url: URL) throws -> RequestCollection {
+    static func load(from url: URL) throws -> [RequestCollection] {
         let data = try Data(contentsOf: url)
-        return try JSONDecoder().decode(RequestCollection.self, from: data)
+        return try JSONDecoder().decode([RequestCollection].self, from: data)
     }
 }
