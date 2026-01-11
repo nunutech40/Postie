@@ -8,16 +8,38 @@
 import SwiftUI
 
 struct GuideView: View {
+    @State private var showOnboarding = false
+    
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 
-                // HEADER
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Interface Guide")
-                        .font(.title2).bold()
-                    Text("Panduan lengkap setiap komponen input di Postie.")
-                        .foregroundColor(.secondary)
+                // HEADER dengan tombol onboarding
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Interface Guide")
+                            .font(.title2).bold()
+                        Text("Panduan lengkap setiap komponen input di Postie.")
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Spacer()
+                    
+                    Button(action: {
+                        showOnboarding = true
+                    }) {
+                        HStack {
+                            Image(systemName: "play.circle.fill")
+                            Text("Tutorial")
+                        }
+                        .font(.subheadline)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Color.accentColor)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
+                    }
+                    .buttonStyle(.plain)
                 }
                 .padding(.bottom, 10)
                 
@@ -122,6 +144,9 @@ struct GuideView: View {
                 Spacer().frame(height: 20)
             }
             .padding()
+        }
+        .sheet(isPresented: $showOnboarding) {
+            OnboardingView(isFromSettings: true)
         }
     }
 }

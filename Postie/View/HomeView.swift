@@ -11,9 +11,10 @@ import SwiftUI
 struct HomeView: View {
     @StateObject var viewModel = HomeViewModel()
     
-    // 1. STATE BUAT BUKA SETTINGS
+    // 1. STATE BUAT BUKA SETTINGS & ONBOARDING
     @State private var showSettings = false
     @State private var isShowingCollectionView = false
+    @State private var showOnboarding = false
     
     var body: some View {
         HStack(spacing: 0) {
@@ -30,6 +31,17 @@ struct HomeView: View {
         }
         // 2. TAMBAH TOOLBAR DI POJOK KANAN ATAS
         .toolbar {
+            // Tutorial Button
+            ToolbarItem(placement: .primaryAction) {
+                Button(action: {
+                    showOnboarding = true
+                }) {
+                    Image(systemName: "play.circle")
+                        .foregroundColor(.secondary)
+                }
+                .help("Tutorial")
+            }
+            
             ToolbarItem(placement: .primaryAction) {
                 Button(action: {
                     isShowingCollectionView = true
@@ -56,6 +68,10 @@ struct HomeView: View {
         // 3. SHEET PEMANGGIL SETTINGS
         .sheet(isPresented: $showSettings) {
             SettingsView(viewModel: viewModel)
+        }
+        // 4. SHEET PEMANGGIL ONBOARDING
+        .sheet(isPresented: $showOnboarding) {
+            OnboardingView(isFromSettings: true)
         }
         .alert("Error", isPresented: Binding(
             get: { viewModel.errorMessage != nil },
@@ -159,9 +175,13 @@ struct ResponseRendererView: View {
             
             // Content Renderer
             if contentType.contains("application/json") {
-                // Kasus 1: JSON (Pretty Print)
+                // Kasus 1: JSON - dengan raw/formatted toggle
+                let displayText = viewModel.showRawResponse ? 
+                    String(data: response.rawData, encoding: .utf8) ?? response.body : 
+                    response.body
+                
                 NativeTextView(
-                    text: response.body,
+                    text: displayText,
                     searchQuery: $viewModel.searchQuery,
                     showSearch: $viewModel.showSearch
                 )
@@ -489,9 +509,43 @@ struct ResponseHeaderView: View {
             
             Spacer()
             
-            // --- GRUP KANAN: SEARCH, STATUS CODE & LATENCY ---
+            // --- GRUP KANAN: ACTION BUTTONS, SEARCH, STATUS CODE & LATENCY ---
             
-            // A. TOMBOL SEARCH
+            // A. COPY BUTTON
+            Button(action: {
+                viewModel.copyResponseToClipboard()
+            }) {
+                Image(systemName: "doc.on.doc")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .buttonStyle(.plain)
+            .help("Copy Response (⌘C)")
+            .keyboardShortcut("c", modifiers: .command)
+            
+            // B. EXPORT BUTTON
+            Button(action: {
+                viewModel.exportResponse()
+            }) {
+                Image(systemName: "square.and.arrow.down")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .buttonStyle(.plain)
+            .help("Export Response")
+            
+            // C. RAW/FORMATTED TOGGLE
+            Button(action: {
+                viewModel.showRawResponse.toggle()
+            }) {
+                Image(systemName: viewModel.showRawResponse ? "text.alignleft" : "text.justify")
+                    .font(.caption)
+                    .foregroundColor(viewModel.showRawResponse ? .orange : .secondary)
+            }
+            .buttonStyle(.plain)
+            .help(viewModel.showRawResponse ? "Show Formatted" : "Show Raw")
+            
+            // D. TOMBOL SEARCH
             Button(action: {
                 viewModel.showSearch.toggle()
                 if !viewModel.showSearch {

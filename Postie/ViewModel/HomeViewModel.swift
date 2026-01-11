@@ -70,6 +70,9 @@ class HomeViewModel: ObservableObject {
     @Published var searchQuery: String = ""
     @Published var showSearch: Bool = false
     
+    // --- RESPONSE FORMATTING ---
+    @Published var showRawResponse: Bool = false // Toggle between raw/formatted
+    
     let methods = ["GET", "POST", "PUT", "DELETE", "PATCH"]
     
     private var currentRequestTask: Task<Void, Never>?
@@ -457,6 +460,20 @@ class HomeViewModel: ObservableObject {
         }
     }
     
+    // MARK: - Helper Functions
+    
+    /// Show toast message with auto-dismiss
+    private func showToastMessage(_ message: String) {
+        toastMessage = message
+        showToast = true
+        
+        // Auto-dismiss after 2 seconds
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            showToast = false
+        }
+    }
+    
     private func substituteVariables(in string: String) -> String {
         guard let environment = selectedEnvironment else { return string }
         
@@ -466,5 +483,40 @@ class HomeViewModel: ObservableObject {
         }
         
         return result
+    }
+    
+    // MARK: - Response Actions
+    
+    /// Copy response body to clipboard
+    func copyResponseToClipboard() {
+        guard let response = response else { return }
+        
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(response.body, forType: .string)
+        
+        showToastMessage("Response copied to clipboard")
+    }
+    
+    /// Export response to file
+    func exportResponse() {
+        guard let response = response else { return }
+        
+        let savePanel = NSSavePanel()
+        savePanel.title = "Export Response"
+        savePanel.nameFieldStringValue = "response.json"
+        savePanel.canCreateDirectories = true
+        savePanel.allowedContentTypes = [.json, .plainText]
+        
+        savePanel.begin { result in
+            guard result == .OK, let url = savePanel.url else { return }
+            
+            do {
+                try response.body.write(to: url, atomically: true, encoding: .utf8)
+                self.showToastMessage("Response exported successfully")
+            } catch {
+                self.errorMessage = "Failed to export: \(error.localizedDescription)"
+            }
+        }
     }
 }
