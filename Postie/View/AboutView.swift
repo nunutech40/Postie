@@ -12,6 +12,10 @@ struct AboutView: View {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
     }
     
+    // private var buildNumber: String {
+    //     Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
+    // }
+    
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
@@ -27,11 +31,6 @@ struct AboutView: View {
                     Text("Postie \(appVersion)")
                         .font(.title2)
                         .fontWeight(.bold)
-                    
-                    Text("Build \(buildNumber)")
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
-                        .monospaced()
                     
                     Text("Created by Nunu Nugraha")
                         .font(.subheadline)
