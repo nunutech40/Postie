@@ -183,49 +183,7 @@ class HomeViewModel: ObservableObject {
     }
     
     // --- CLEAN PRESET LOGIC ---
-    
-    @MainActor
-    func savePreset() {
-        // 1. Minta URL ke spesialis jendela (FileService)
-        guard let url = FileService.getSaveURL() else { return }
-        
-        // 2. Bungkus data
-        let preset = RequestPreset(
-            method: self.selectedMethod,
-            url: self.urlString,
-            authToken: self.authToken,
-            rawHeaders: self.rawHeaders,
-            requestBody: self.requestBody,
-            wasSuccessful: true
-        )
-        
-        // 3. Suruh PresetService simpan ke disk
-        do {
-            try PresetService.save(preset: preset, to: url)
-        } catch {
-            self.errorMessage = error.localizedDescription
-        }
-    }
-    
-    @MainActor
-    func loadPreset() {
-        // 1. Minta URL ke spesialis jendela (FileService)
-        guard let url = FileService.getOpenURL() else { return }
-        
-        // 2. Suruh PresetService baca data
-        do {
-            let preset = try PresetService.load(from: url)
-            
-            // 3. Update State (UI otomatis berubah)
-            self.selectedMethod = preset.method
-            self.urlString = preset.url
-            self.authToken = preset.authToken
-            self.rawHeaders = preset.rawHeaders
-            self.requestBody = preset.requestBody
-        } catch {
-            self.errorMessage = error.localizedDescription
-        }
-    }
+    // (Removed savePreset and loadPreset functions as per user request)
     
     // --- HISTORY LOGIC ---
     @MainActor

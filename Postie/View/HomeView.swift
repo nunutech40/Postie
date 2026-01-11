@@ -203,24 +203,6 @@ struct TargetSectionView: View {
                     .popover(isPresented: $showHistory, arrowEdge: .bottom) {
                         HistoryView(viewModel: viewModel, showHistory: $showHistory)
                     }
-                    
-                    Button(action: { viewModel.loadPreset() }) {
-                        Image(systemName: "folder")
-                            .font(.system(size: 13, weight: .medium))
-                            .frame(width: 18, height: 18) // Kunci 3: Frame kotak untuk icon
-                    }
-                    .buttonStyle(.plain)
-                    .foregroundColor(.secondary)
-                    .help("Load Request (.json)")
-                    
-                    Button(action: { viewModel.savePreset() }) {
-                        Image(systemName: "square.and.arrow.down")
-                            .font(.system(size: 13, weight: .medium))
-                            .frame(width: 18, height: 18) // Frame kotak agar lurus
-                    }
-                    .buttonStyle(.plain)
-                    .foregroundColor(.secondary)
-                    .help("Save Request (.json)")
                 }
             }
             // Kunci 4: Berikan tinggi tetap pada baris header agar sinkron
