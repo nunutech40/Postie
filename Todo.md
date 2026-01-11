@@ -4,6 +4,26 @@ Berdasarkan MVP saat ini dan keunggulannya (native, ringan, performa tinggi), be
 
 ---
 
+## ✅ Refactoring & Improvements (Selesai)
+
+### 1. HomeViewModel Refactoring
+-   [x] **Mengapa:** HomeViewModel adalah class yang paling gemuk dengan fungsi dan state untuk hampir semua view dan feature. Perlu restrukturisasi untuk maintainability.
+-   [x] **Implementasi:**
+    -   [x] Reorganisasi dengan extension-based structure berdasarkan fitur
+    -   [x] Kategori: Request Execution, Download Management, History, Collections, Environment, Response Actions, UI Helpers
+    -   [x] Dokumentasi arsitektur di `HomeViewModel-Architecture.md`
+    -   [x] Build verification: ✅ SUCCESS
+
+### 2. Onboarding Documentation
+-   [x] **Mengapa:** Fitur onboarding sudah diimplementasikan tapi belum terdokumentasi di README
+-   [x] **Implementasi:**
+    -   [x] Tambah ke section "Developer Experience" di README
+    -   [x] Tambah highlight fitur #6 dengan detail 4-slide onboarding flow
+    -   [x] Dokumentasi cara akses ulang dari toolbar
+
+---
+
+
 ## 🚀 Fitur Kritis (Dukungan MVP & Dampak Langsung)
 
 Fitur-fitur ini penting untuk melengkapi fungsionalitas yang ada, meningkatkan alur kerja inti, dan memenuhi ekspektasi dasar pengguna terhadap klien API modern.
