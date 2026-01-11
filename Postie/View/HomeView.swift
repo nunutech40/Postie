@@ -11,9 +11,10 @@ import SwiftUI
 struct HomeView: View {
     @StateObject var viewModel = HomeViewModel()
     
-    // 1. STATE BUAT BUKA SETTINGS
+    // 1. STATE BUAT BUKA SETTINGS & ONBOARDING
     @State private var showSettings = false
     @State private var isShowingCollectionView = false
+    @State private var showOnboarding = false
     
     var body: some View {
         HStack(spacing: 0) {
@@ -30,6 +31,17 @@ struct HomeView: View {
         }
         // 2. TAMBAH TOOLBAR DI POJOK KANAN ATAS
         .toolbar {
+            // Tutorial Button
+            ToolbarItem(placement: .primaryAction) {
+                Button(action: {
+                    showOnboarding = true
+                }) {
+                    Image(systemName: "play.circle")
+                        .foregroundColor(.secondary)
+                }
+                .help("Tutorial")
+            }
+            
             ToolbarItem(placement: .primaryAction) {
                 Button(action: {
                     isShowingCollectionView = true
@@ -56,6 +68,10 @@ struct HomeView: View {
         // 3. SHEET PEMANGGIL SETTINGS
         .sheet(isPresented: $showSettings) {
             SettingsView(viewModel: viewModel)
+        }
+        // 4. SHEET PEMANGGIL ONBOARDING
+        .sheet(isPresented: $showOnboarding) {
+            OnboardingView(isFromSettings: true)
         }
         .alert("Error", isPresented: Binding(
             get: { viewModel.errorMessage != nil },
