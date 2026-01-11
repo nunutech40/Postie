@@ -253,15 +253,28 @@ struct TargetSectionView: View {
         VStack(alignment: .leading, spacing: 8) {
             
             // --- HEADER DENGAN ICON YANG LURUS & PRO ---
-            HStack(alignment: .center) { // Kunci 1: Center alignment
+            HStack(alignment: .center) {
                 SectionHeader(title: "TARGET")
-                    // Kunci 2: Pastikan teks tidak punya padding bawah liar
                     .frame(maxHeight: .infinity)
                 
                 Spacer()
                 
                 // Group Tombol dengan frame yang konsisten
                 HStack(spacing: 14) {
+                    // Clear URL Button
+                    if !viewModel.urlString.isEmpty {
+                        Button(action: { 
+                            viewModel.urlString = ""
+                        }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.system(size: 13, weight: .medium))
+                                .frame(width: 18, height: 18)
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundColor(.secondary)
+                        .help("Clear URL")
+                    }
+                    
                     Button(action: { showHistory = true }) {
                         Image(systemName: "clock")
                             .font(.system(size: 13, weight: .medium))
@@ -275,7 +288,6 @@ struct TargetSectionView: View {
                     }
                 }
             }
-            // Kunci 4: Berikan tinggi tetap pada baris header agar sinkron
             .frame(height: 20)
             .padding(.bottom, 4)
             
@@ -319,13 +331,40 @@ struct HeadersSectionView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            SectionHeader(title: "HEADERS")
+            HStack {
+                SectionHeader(title: "HEADERS")
+                Spacer()
+                // Clear Headers Button
+                if !viewModel.rawHeaders.isEmpty {
+                    Button(action: { 
+                        viewModel.rawHeaders = ""
+                    }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 13, weight: .medium))
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundColor(.secondary)
+                    .help("Clear Headers")
+                }
+            }
             
             // Auth Shortcut
             HStack {
                 Image(systemName: "key.fill").foregroundColor(.secondary)
                 TextField("Bearer Token (Optional)", text: $viewModel.authToken)
                     .textFieldStyle(.plain)
+                
+                // Clear Token Button
+                if !viewModel.authToken.isEmpty {
+                    Button(action: { 
+                        viewModel.authToken = ""
+                    }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.secondary)
+                            .font(.system(size: 14))
+                    }
+                    .buttonStyle(.plain)
+                }
             }
             .padding(8)
             .background(Color(NSColor.controlBackgroundColor))
@@ -358,6 +397,20 @@ struct BodySectionView: View {
                 HStack {
                     SectionHeader(title: "BODY PAYLOAD")
                     Spacer()
+                    
+                    // Clear Body Button
+                    if !viewModel.requestBody.isEmpty {
+                        Button(action: { 
+                            viewModel.requestBody = ""
+                        }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.system(size: 13, weight: .medium))
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundColor(.secondary)
+                        .help("Clear Body")
+                    }
+                    
                     Text("JSON").font(.caption2).padding(.horizontal, 4)
                         .background(Color.gray.opacity(0.2)).cornerRadius(4)
                 }

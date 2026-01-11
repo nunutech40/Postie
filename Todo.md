@@ -40,7 +40,11 @@ Fitur-fitur ini dapat dipertimbangkan untuk pembaruan selanjutnya, lebih meningk
 
 -   [x] **Mengapa:** Untuk respons JSON yang besar, kemampuan untuk mencari key atau value tertentu (seperti `Cmd+F` di editor teks) sangat penting untuk debugging dan inspeksi data yang efisien.
 -   [x] **Implementasi:**
-    -   [x] Perluas `NativeTextView` atau pembungkusnya untuk mengintegrasikan fungsionalitas pencarian (`NSSearchField` yang setara) yang menyorot hasil pencarian.
+    -   [x] Perluas `NativeTextView` dengan Coordinator pattern untuk search functionality
+    -   [x] Tambahkan SearchBarView dengan real-time highlighting
+    -   [x] Keyboard shortcut `⌘F` untuk quick access
+    -   [x] Auto-scroll ke hasil pertama dengan visual indicator
+-   [x] **Bonus:** Quick clear buttons untuk semua input fields (URL, Token, Headers, Body)
 
 ### 5. Koleksi/Pengelompokan Request dalam Aplikasi
 

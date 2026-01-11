@@ -29,6 +29,12 @@ Pendekatan ini memastikan aplikasi tetap **ringan, cepat, dan stabil** bahkan sa
 - **Dynamic JSON Beautifier**  
   Respon JSON otomatis di-*pretty print* agar mudah dibaca dan dianalisis.
 
+- **Search in Response Body**  
+  Cari teks dalam response dengan shortcut `⌘F`. Hasil pencarian di-highlight otomatis dengan warna kuning dan scroll ke hasil pertama. Mendukung case-insensitive search untuk debugging yang lebih cepat.
+
+- **Quick Clear Buttons**  
+  Tombol X untuk clear input dengan satu klik pada URL, Bearer Token, Headers, dan Body. Tidak perlu select all + delete lagi.
+
 - **Latency Evaluator**  
   Indikator visual berbasis durasi request (Excellent, Good, Average, Slow).
 
@@ -44,7 +50,7 @@ Pendekatan ini memastikan aplikasi tetap **ringan, cepat, dan stabil** bahkan sa
 - **Smart Error Mapping**  
   Error teknis dipetakan menjadi pesan manusiawi (Timeout, No Internet, Invalid URL).
 
-- **Manajemen Koleksi (Request Collections)**
+- **Manajemen Koleksi (Request Collections)**  
   Organisir request API Anda ke dalam koleksi yang dapat disimpan dan dimuat.
   - **Dua-Sidebar Layout:** Navigasi mudah dengan daftar koleksi di kiri dan detail request di kanan.
   - **Aksi Koleksi:** Tambah koleksi baru (dengan input nama via popup & cek duplikasi), ganti nama, hapus koleksi (dengan konfirmasi).
