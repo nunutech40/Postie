@@ -66,6 +66,10 @@ class HomeViewModel: ObservableObject {
         return environments.first { $0.id == selectedID }
     }
     
+    // --- SEARCH ---
+    @Published var searchQuery: String = ""
+    @Published var showSearch: Bool = false
+    
     let methods = ["GET", "POST", "PUT", "DELETE", "PATCH"]
     
     private var currentRequestTask: Task<Void, Never>?

@@ -123,9 +123,9 @@ struct ResponsePanel: View {
                 // --- KASUS 2: ADA RESPON ---
                 else if let response = viewModel.response {
                     VStack(alignment: .leading, spacing: 0) {
-                        ResponseHeaderView(response: response)
+                        ResponseHeaderView(response: response, viewModel: viewModel)
                         Divider()
-                        ResponseRendererView(response: response) // <- Ganti di sini
+                        ResponseRendererView(response: response, viewModel: viewModel)
                     }
                 }
                 // --- KASUS 3: KOSONG ---
@@ -143,33 +143,103 @@ struct ResponsePanel: View {
 
 struct ResponseRendererView: View {
     let response: APIResponse
+    @ObservedObject var viewModel: HomeViewModel
     
     var body: some View {
-        // Ambil content type, default ke string kosong jika tidak ada
-        let contentType = response.headers["Content-Type"] ?? ""
-        
-        if contentType.contains("application/json") {
-            // Kasus 1: JSON (Pretty Print)
-            NativeTextView(text: response.body)
-        } else if contentType.contains("text/html") {
-            // Kasus 2: HTML
-            WebView(htmlString: response.body)
-        } else if contentType.starts(with: "image/") {
-            // Kasus 3: Gambar (PNG, JPEG, dll)
-            if let nsImage = NSImage(data: response.rawData) {
-                ScrollView {
-                    Image(nsImage: nsImage)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .padding()
+        VStack(spacing: 0) {
+            // Search Bar (hanya untuk text-based responses)
+            let contentType = response.headers["Content-Type"] ?? ""
+            let isTextBased = contentType.contains("application/json") || 
+                              contentType.contains("text/") || 
+                              contentType.isEmpty
+            
+            if isTextBased {
+                SearchBarView(viewModel: viewModel)
+            }
+            
+            // Content Renderer
+            if contentType.contains("application/json") {
+                // Kasus 1: JSON (Pretty Print)
+                NativeTextView(
+                    text: response.body,
+                    searchQuery: $viewModel.searchQuery,
+                    showSearch: $viewModel.showSearch
+                )
+            } else if contentType.contains("text/html") {
+                // Kasus 2: HTML
+                WebView(htmlString: response.body)
+            } else if contentType.starts(with: "image/") {
+                // Kasus 3: Gambar (PNG, JPEG, dll)
+                if let nsImage = NSImage(data: response.rawData) {
+                    ScrollView {
+                        Image(nsImage: nsImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .padding()
+                    }
+                } else {
+                    // Fallback jika data gambar rusak
+                    NativeTextView(
+                        text: "Failed to load image data.",
+                        searchQuery: $viewModel.searchQuery,
+                        showSearch: $viewModel.showSearch
+                    )
                 }
             } else {
-                // Fallback jika data gambar rusak
-                NativeTextView(text: "Failed to load image data.")
+                // Kasus 4: Fallback ke plain text
+                NativeTextView(
+                    text: response.body,
+                    searchQuery: $viewModel.searchQuery,
+                    showSearch: $viewModel.showSearch
+                )
             }
-        } else {
-            // Kasus 4: Fallback ke plain text
-            NativeTextView(text: response.body)
+        }
+    }
+}
+
+// MARK: - Search Bar Component
+struct SearchBarView: View {
+    @ObservedObject var viewModel: HomeViewModel
+    
+    var body: some View {
+        if viewModel.showSearch {
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(.secondary)
+                    .font(.system(size: 14))
+                
+                TextField("Search in response...", text: $viewModel.searchQuery)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 13))
+                
+                if !viewModel.searchQuery.isEmpty {
+                    Button(action: {
+                        viewModel.searchQuery = ""
+                    }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+                
+                Button(action: {
+                    viewModel.showSearch = false
+                    viewModel.searchQuery = ""
+                }) {
+                    Image(systemName: "xmark")
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color(NSColor.controlBackgroundColor))
+            .overlay(
+                Rectangle()
+                    .frame(height: 1)
+                    .foregroundColor(Color.gray.opacity(0.2)),
+                alignment: .bottom
+            )
         }
     }
 }
@@ -346,6 +416,7 @@ struct SendButtonView: View {
 
 struct ResponseHeaderView: View {
     let response: APIResponse
+    @ObservedObject var viewModel: HomeViewModel
     
     @State private var showDictionary = false
     
@@ -357,9 +428,24 @@ struct ResponseHeaderView: View {
             
             Spacer()
             
-            // --- GRUP KANAN: STATUS CODE & LATENCY ---
+            // --- GRUP KANAN: SEARCH, STATUS CODE & LATENCY ---
             
-            // A. BADGE STATUS CODE
+            // A. TOMBOL SEARCH
+            Button(action: {
+                viewModel.showSearch.toggle()
+                if !viewModel.showSearch {
+                    viewModel.searchQuery = ""
+                }
+            }) {
+                Image(systemName: viewModel.showSearch ? "magnifyingglass.circle.fill" : "magnifyingglass")
+                    .font(.caption)
+                    .foregroundColor(viewModel.showSearch ? .blue : .secondary)
+            }
+            .buttonStyle(.plain)
+            .help("Search in Response (⌘F)")
+            .keyboardShortcut("f", modifiers: .command)
+            
+            // B. BADGE STATUS CODE
             HStack(spacing: 6) {
                 // Teks Status (Contoh: 200 OK)
                 Text("\(response.statusCode) \(getStatusCodeDescription(response.statusCode))")
@@ -385,7 +471,7 @@ struct ResponseHeaderView: View {
                 }
             }
             
-            // B. BADGE LATENCY (Warna-warni)
+            // C. BADGE LATENCY (Warna-warni)
             let latencyColor = LatencyEvaluator.evaluate(response.latency)
             
             HStack(spacing: 4) {
