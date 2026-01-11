@@ -159,9 +159,13 @@ struct ResponseRendererView: View {
             
             // Content Renderer
             if contentType.contains("application/json") {
-                // Kasus 1: JSON (Pretty Print)
+                // Kasus 1: JSON - dengan raw/formatted toggle
+                let displayText = viewModel.showRawResponse ? 
+                    String(data: response.rawData, encoding: .utf8) ?? response.body : 
+                    response.body
+                
                 NativeTextView(
-                    text: response.body,
+                    text: displayText,
                     searchQuery: $viewModel.searchQuery,
                     showSearch: $viewModel.showSearch
                 )
@@ -489,9 +493,43 @@ struct ResponseHeaderView: View {
             
             Spacer()
             
-            // --- GRUP KANAN: SEARCH, STATUS CODE & LATENCY ---
+            // --- GRUP KANAN: ACTION BUTTONS, SEARCH, STATUS CODE & LATENCY ---
             
-            // A. TOMBOL SEARCH
+            // A. COPY BUTTON
+            Button(action: {
+                viewModel.copyResponseToClipboard()
+            }) {
+                Image(systemName: "doc.on.doc")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .buttonStyle(.plain)
+            .help("Copy Response (⌘C)")
+            .keyboardShortcut("c", modifiers: .command)
+            
+            // B. EXPORT BUTTON
+            Button(action: {
+                viewModel.exportResponse()
+            }) {
+                Image(systemName: "square.and.arrow.down")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .buttonStyle(.plain)
+            .help("Export Response")
+            
+            // C. RAW/FORMATTED TOGGLE
+            Button(action: {
+                viewModel.showRawResponse.toggle()
+            }) {
+                Image(systemName: viewModel.showRawResponse ? "text.alignleft" : "text.justify")
+                    .font(.caption)
+                    .foregroundColor(viewModel.showRawResponse ? .orange : .secondary)
+            }
+            .buttonStyle(.plain)
+            .help(viewModel.showRawResponse ? "Show Formatted" : "Show Raw")
+            
+            // D. TOMBOL SEARCH
             Button(action: {
                 viewModel.showSearch.toggle()
                 if !viewModel.showSearch {
