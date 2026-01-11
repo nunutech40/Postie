@@ -38,9 +38,13 @@ Fitur-fitur ini dapat dipertimbangkan untuk pembaruan selanjutnya, lebih meningk
 
 ### 4. Pencarian dalam Body Respon
 
--   [ ] **Mengapa:** Untuk respons JSON yang besar, kemampuan untuk mencari key atau value tertentu (seperti `Cmd+F` di editor teks) sangat penting untuk debugging dan inspeksi data yang efisien.
--   [ ] **Implementasi:**
-    -   [ ] Perluas `NativeTextView` atau pembungkusnya untuk mengintegrasikan fungsionalitas pencarian (`NSSearchField` yang setara) yang menyorot hasil pencarian.
+-   [x] **Mengapa:** Untuk respons JSON yang besar, kemampuan untuk mencari key atau value tertentu (seperti `Cmd+F` di editor teks) sangat penting untuk debugging dan inspeksi data yang efisien.
+-   [x] **Implementasi:**
+    -   [x] Perluas `NativeTextView` dengan Coordinator pattern untuk search functionality
+    -   [x] Tambahkan SearchBarView dengan real-time highlighting
+    -   [x] Keyboard shortcut `⌘F` untuk quick access
+    -   [x] Auto-scroll ke hasil pertama dengan visual indicator
+-   [x] **Bonus:** Quick clear buttons untuk semua input fields (URL, Token, Headers, Body)
 
 ### 5. Koleksi/Pengelompokan Request dalam Aplikasi
 
@@ -51,9 +55,9 @@ Fitur-fitur ini dapat dipertimbangkan untuk pembaruan selanjutnya, lebih meningk
 
 ### 6. Render Respon yang Ditingkatkan (HTML, Gambar)
 
--   [ ] **Mengapa:** Tidak semua respons API adalah JSON. Mendukung rendering langsung HTML (melalui `WebView`) atau menampilkan gambar (PNG, JPEG) berdasarkan header `Content-Type` akan membuat Postie lebih serbaguna untuk berbagai jenis API.
--   [ ] **Implementasi:**
-    -   [ ] Modifikasi `ResponsePanel` untuk merender tipe konten yang berbeda secara kondisional berdasarkan `APIResponse.headers["Content-Type"]`.
+-   [x] **Mengapa:** Tidak semua respons API adalah JSON. Mendukung rendering langsung HTML (melalui `WebView`) atau menampilkan gambar (PNG, JPEG) berdasarkan header `Content-Type` akan membuat Postie lebih serbaguna untuk berbagai jenis API.
+-   [x] **Implementasi:**
+    -   [x] Modifikasi `ResponsePanel` untuk merender tipe konten yang berbeda secara kondisional berdasarkan `APIResponse.headers["Content-Type"]`.
 
 ---
 

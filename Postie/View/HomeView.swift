@@ -123,9 +123,9 @@ struct ResponsePanel: View {
                 // --- KASUS 2: ADA RESPON ---
                 else if let response = viewModel.response {
                     VStack(alignment: .leading, spacing: 0) {
-                        ResponseHeaderView(response: response)
+                        ResponseHeaderView(response: response, viewModel: viewModel)
                         Divider()
-                        ResponseRendererView(response: response) // <- Ganti di sini
+                        ResponseRendererView(response: response, viewModel: viewModel)
                     }
                 }
                 // --- KASUS 3: KOSONG ---
@@ -143,33 +143,103 @@ struct ResponsePanel: View {
 
 struct ResponseRendererView: View {
     let response: APIResponse
+    @ObservedObject var viewModel: HomeViewModel
     
     var body: some View {
-        // Ambil content type, default ke string kosong jika tidak ada
-        let contentType = response.headers["Content-Type"] ?? ""
-        
-        if contentType.contains("application/json") {
-            // Kasus 1: JSON (Pretty Print)
-            NativeTextView(text: response.body)
-        } else if contentType.contains("text/html") {
-            // Kasus 2: HTML
-            WebView(htmlString: response.body)
-        } else if contentType.starts(with: "image/") {
-            // Kasus 3: Gambar (PNG, JPEG, dll)
-            if let nsImage = NSImage(data: response.rawData) {
-                ScrollView {
-                    Image(nsImage: nsImage)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .padding()
+        VStack(spacing: 0) {
+            // Search Bar (hanya untuk text-based responses)
+            let contentType = response.headers["Content-Type"] ?? ""
+            let isTextBased = contentType.contains("application/json") || 
+                              contentType.contains("text/") || 
+                              contentType.isEmpty
+            
+            if isTextBased {
+                SearchBarView(viewModel: viewModel)
+            }
+            
+            // Content Renderer
+            if contentType.contains("application/json") {
+                // Kasus 1: JSON (Pretty Print)
+                NativeTextView(
+                    text: response.body,
+                    searchQuery: $viewModel.searchQuery,
+                    showSearch: $viewModel.showSearch
+                )
+            } else if contentType.contains("text/html") {
+                // Kasus 2: HTML
+                WebView(htmlString: response.body)
+            } else if contentType.starts(with: "image/") {
+                // Kasus 3: Gambar (PNG, JPEG, dll)
+                if let nsImage = NSImage(data: response.rawData) {
+                    ScrollView {
+                        Image(nsImage: nsImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .padding()
+                    }
+                } else {
+                    // Fallback jika data gambar rusak
+                    NativeTextView(
+                        text: "Failed to load image data.",
+                        searchQuery: $viewModel.searchQuery,
+                        showSearch: $viewModel.showSearch
+                    )
                 }
             } else {
-                // Fallback jika data gambar rusak
-                NativeTextView(text: "Failed to load image data.")
+                // Kasus 4: Fallback ke plain text
+                NativeTextView(
+                    text: response.body,
+                    searchQuery: $viewModel.searchQuery,
+                    showSearch: $viewModel.showSearch
+                )
             }
-        } else {
-            // Kasus 4: Fallback ke plain text
-            NativeTextView(text: response.body)
+        }
+    }
+}
+
+// MARK: - Search Bar Component
+struct SearchBarView: View {
+    @ObservedObject var viewModel: HomeViewModel
+    
+    var body: some View {
+        if viewModel.showSearch {
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(.secondary)
+                    .font(.system(size: 14))
+                
+                TextField("Search in response...", text: $viewModel.searchQuery)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 13))
+                
+                if !viewModel.searchQuery.isEmpty {
+                    Button(action: {
+                        viewModel.searchQuery = ""
+                    }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+                
+                Button(action: {
+                    viewModel.showSearch = false
+                    viewModel.searchQuery = ""
+                }) {
+                    Image(systemName: "xmark")
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color(NSColor.controlBackgroundColor))
+            .overlay(
+                Rectangle()
+                    .frame(height: 1)
+                    .foregroundColor(Color.gray.opacity(0.2)),
+                alignment: .bottom
+            )
         }
     }
 }
@@ -183,9 +253,8 @@ struct TargetSectionView: View {
         VStack(alignment: .leading, spacing: 8) {
             
             // --- HEADER DENGAN ICON YANG LURUS & PRO ---
-            HStack(alignment: .center) { // Kunci 1: Center alignment
+            HStack(alignment: .center) {
                 SectionHeader(title: "TARGET")
-                    // Kunci 2: Pastikan teks tidak punya padding bawah liar
                     .frame(maxHeight: .infinity)
                 
                 Spacer()
@@ -203,27 +272,8 @@ struct TargetSectionView: View {
                     .popover(isPresented: $showHistory, arrowEdge: .bottom) {
                         HistoryView(viewModel: viewModel, showHistory: $showHistory)
                     }
-                    
-                    Button(action: { viewModel.loadPreset() }) {
-                        Image(systemName: "folder")
-                            .font(.system(size: 13, weight: .medium))
-                            .frame(width: 18, height: 18) // Kunci 3: Frame kotak untuk icon
-                    }
-                    .buttonStyle(.plain)
-                    .foregroundColor(.secondary)
-                    .help("Load Request (.json)")
-                    
-                    Button(action: { viewModel.savePreset() }) {
-                        Image(systemName: "square.and.arrow.down")
-                            .font(.system(size: 13, weight: .medium))
-                            .frame(width: 18, height: 18) // Frame kotak agar lurus
-                    }
-                    .buttonStyle(.plain)
-                    .foregroundColor(.secondary)
-                    .help("Save Request (.json)")
                 }
             }
-            // Kunci 4: Berikan tinggi tetap pada baris header agar sinkron
             .frame(height: 20)
             .padding(.bottom, 4)
             
@@ -249,14 +299,31 @@ struct TargetSectionView: View {
                     Spacer()
                 }
                 
-                NativeEditableTextView(text: $viewModel.urlString)
-                    .font(.system(.body, design: .monospaced))
-                    .autocorrectionDisabled(true)
-                    .frame(height: 50)
-                    .padding(4)
-                    .background(Color(NSColor.textBackgroundColor))
-                    .cornerRadius(6)
-                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.gray.opacity(0.2)))
+                // URL Input dengan Clear Button di dalam
+                ZStack(alignment: .topTrailing) {
+                    NativeEditableTextView(text: $viewModel.urlString)
+                        .font(.system(.body, design: .monospaced))
+                        .autocorrectionDisabled(true)
+                        .frame(height: 50)
+                        .padding(4)
+                        .background(Color(NSColor.textBackgroundColor))
+                        .cornerRadius(6)
+                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.gray.opacity(0.2)))
+                    
+                    // Clear button overlay
+                    if !viewModel.urlString.isEmpty {
+                        Button(action: { 
+                            viewModel.urlString = ""
+                        }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.secondary)
+                                .font(.system(size: 16))
+                        }
+                        .buttonStyle(.plain)
+                        .padding(8)
+                        .help("Clear URL")
+                    }
+                }
             }
         }
     }
@@ -274,23 +341,52 @@ struct HeadersSectionView: View {
                 Image(systemName: "key.fill").foregroundColor(.secondary)
                 TextField("Bearer Token (Optional)", text: $viewModel.authToken)
                     .textFieldStyle(.plain)
+                
+                // Clear Token Button
+                if !viewModel.authToken.isEmpty {
+                    Button(action: { 
+                        viewModel.authToken = ""
+                    }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.secondary)
+                            .font(.system(size: 14))
+                    }
+                    .buttonStyle(.plain)
+                }
             }
             .padding(8)
             .background(Color(NSColor.controlBackgroundColor))
             .cornerRadius(6)
             .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.gray.opacity(0.2)))
             
-            // Raw Headers Input
+            // Raw Headers Input dengan Clear Button
             VStack(alignment: .leading, spacing: 4) {
                 Text("Custom Headers (Key: Value)").font(.caption2).foregroundColor(.secondary)
-                NativeEditableTextView(text: $viewModel.rawHeaders)
-                    .font(.system(.caption, design: .monospaced))
-                    .frame(height: 80)
-                    .autocorrectionDisabled(true)
-                    .padding(4)
-                    .background(Color(NSColor.textBackgroundColor))
-                    .cornerRadius(6)
-                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.gray.opacity(0.2)))
+                
+                ZStack(alignment: .topTrailing) {
+                    NativeEditableTextView(text: $viewModel.rawHeaders)
+                        .font(.system(.caption, design: .monospaced))
+                        .frame(height: 80)
+                        .autocorrectionDisabled(true)
+                        .padding(4)
+                        .background(Color(NSColor.textBackgroundColor))
+                        .cornerRadius(6)
+                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.gray.opacity(0.2)))
+                    
+                    // Clear button overlay
+                    if !viewModel.rawHeaders.isEmpty {
+                        Button(action: { 
+                            viewModel.rawHeaders = ""
+                        }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.secondary)
+                                .font(.system(size: 14))
+                        }
+                        .buttonStyle(.plain)
+                        .padding(6)
+                        .help("Clear Headers")
+                    }
+                }
             }
         }
     }
@@ -310,14 +406,31 @@ struct BodySectionView: View {
                         .background(Color.gray.opacity(0.2)).cornerRadius(4)
                 }
                 
-                NativeEditableTextView(text: $viewModel.requestBody)
-                    .font(.system(size: 12, design: .monospaced))
-                    .frame(height: 200)
-                    .autocorrectionDisabled(true)
-                    .padding(4)
-                    .background(Color(NSColor.textBackgroundColor))
-                    .cornerRadius(6)
-                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.gray.opacity(0.2)))
+                // Body Input dengan Clear Button
+                ZStack(alignment: .topTrailing) {
+                    NativeEditableTextView(text: $viewModel.requestBody)
+                        .font(.system(size: 12, design: .monospaced))
+                        .frame(height: 200)
+                        .autocorrectionDisabled(true)
+                        .padding(4)
+                        .background(Color(NSColor.textBackgroundColor))
+                        .cornerRadius(6)
+                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.gray.opacity(0.2)))
+                    
+                    // Clear button overlay
+                    if !viewModel.requestBody.isEmpty {
+                        Button(action: { 
+                            viewModel.requestBody = ""
+                        }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.secondary)
+                                .font(.system(size: 14))
+                        }
+                        .buttonStyle(.plain)
+                        .padding(6)
+                        .help("Clear Body")
+                    }
+                }
             }
         } else {
             EmptyView()
@@ -364,6 +477,7 @@ struct SendButtonView: View {
 
 struct ResponseHeaderView: View {
     let response: APIResponse
+    @ObservedObject var viewModel: HomeViewModel
     
     @State private var showDictionary = false
     
@@ -375,9 +489,24 @@ struct ResponseHeaderView: View {
             
             Spacer()
             
-            // --- GRUP KANAN: STATUS CODE & LATENCY ---
+            // --- GRUP KANAN: SEARCH, STATUS CODE & LATENCY ---
             
-            // A. BADGE STATUS CODE
+            // A. TOMBOL SEARCH
+            Button(action: {
+                viewModel.showSearch.toggle()
+                if !viewModel.showSearch {
+                    viewModel.searchQuery = ""
+                }
+            }) {
+                Image(systemName: viewModel.showSearch ? "magnifyingglass.circle.fill" : "magnifyingglass")
+                    .font(.caption)
+                    .foregroundColor(viewModel.showSearch ? .blue : .secondary)
+            }
+            .buttonStyle(.plain)
+            .help("Search in Response (⌘F)")
+            .keyboardShortcut("f", modifiers: .command)
+            
+            // B. BADGE STATUS CODE
             HStack(spacing: 6) {
                 // Teks Status (Contoh: 200 OK)
                 Text("\(response.statusCode) \(getStatusCodeDescription(response.statusCode))")
@@ -403,7 +532,7 @@ struct ResponseHeaderView: View {
                 }
             }
             
-            // B. BADGE LATENCY (Warna-warni)
+            // C. BADGE LATENCY (Warna-warni)
             let latencyColor = LatencyEvaluator.evaluate(response.latency)
             
             HStack(spacing: 4) {

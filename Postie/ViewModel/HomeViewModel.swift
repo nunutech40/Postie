@@ -66,6 +66,10 @@ class HomeViewModel: ObservableObject {
         return environments.first { $0.id == selectedID }
     }
     
+    // --- SEARCH ---
+    @Published var searchQuery: String = ""
+    @Published var showSearch: Bool = false
+    
     let methods = ["GET", "POST", "PUT", "DELETE", "PATCH"]
     
     private var currentRequestTask: Task<Void, Never>?
@@ -89,8 +93,9 @@ class HomeViewModel: ObservableObject {
     
     @MainActor
     func initializeCollections() {
-        // Load collections from a file or initialize with a default
-        if collections.isEmpty {
+        self.collections = CollectionService.loadAuto() // Attempt to load saved collections first
+        
+        if collections.isEmpty { // If no collections were loaded, create a default
             self.collections = [
                 RequestCollection(name: "My Collection", requests: [])
             ]
@@ -182,49 +187,7 @@ class HomeViewModel: ObservableObject {
     }
     
     // --- CLEAN PRESET LOGIC ---
-    
-    @MainActor
-    func savePreset() {
-        // 1. Minta URL ke spesialis jendela (FileService)
-        guard let url = FileService.getSaveURL() else { return }
-        
-        // 2. Bungkus data
-        let preset = RequestPreset(
-            method: self.selectedMethod,
-            url: self.urlString,
-            authToken: self.authToken,
-            rawHeaders: self.rawHeaders,
-            requestBody: self.requestBody,
-            wasSuccessful: true
-        )
-        
-        // 3. Suruh PresetService simpan ke disk
-        do {
-            try PresetService.save(preset: preset, to: url)
-        } catch {
-            self.errorMessage = error.localizedDescription
-        }
-    }
-    
-    @MainActor
-    func loadPreset() {
-        // 1. Minta URL ke spesialis jendela (FileService)
-        guard let url = FileService.getOpenURL() else { return }
-        
-        // 2. Suruh PresetService baca data
-        do {
-            let preset = try PresetService.load(from: url)
-            
-            // 3. Update State (UI otomatis berubah)
-            self.selectedMethod = preset.method
-            self.urlString = preset.url
-            self.authToken = preset.authToken
-            self.rawHeaders = preset.rawHeaders
-            self.requestBody = preset.requestBody
-        } catch {
-            self.errorMessage = error.localizedDescription
-        }
-    }
+    // (Removed savePreset and loadPreset functions as per user request)
     
     // --- HISTORY LOGIC ---
     @MainActor
@@ -279,6 +242,7 @@ class HomeViewModel: ObservableObject {
             let loadedCollections = try CollectionService.load(from: url)
             self.collections = loadedCollections
             selectFirstCollection()
+            // No auto-save here, as this is a user-initiated load. Auto-save will happen on modifications.
         } catch {
             self.errorMessage = error.localizedDescription
         }
@@ -291,6 +255,7 @@ class HomeViewModel: ObservableObject {
         do {
             try CollectionService.save(collections: self.collections, to: url)
             showToast(message: "Collections Saved")
+            // No auto-save here, as this is a user-initiated save. Auto-save is handled internally.
         } catch {
             self.errorMessage = error.localizedDescription
         }
@@ -316,6 +281,7 @@ class HomeViewModel: ObservableObject {
         self.collections.append(newCollection)
         self.selectedCollectionID = newCollection.id
         self.editingCollectionID = newCollection.id // No longer needed for explicit TextField, but can be used for initial state.
+        CollectionService.saveAuto(collections: collections) // AUTO-SAVE
     }
     
     @MainActor
@@ -330,6 +296,7 @@ class HomeViewModel: ObservableObject {
         self.collections.removeAll(where: { $0.id == id })
         self.collectionToDeleteID = nil
         selectFirstCollection()
+        CollectionService.saveAuto(collections: collections) // AUTO-SAVE
     }
     
     @MainActor
@@ -358,6 +325,7 @@ class HomeViewModel: ObservableObject {
         self.collectionToRenameID = nil
         self.newCollectionEditedName = ""
         showToast(message: "Collection Renamed")
+        CollectionService.saveAuto(collections: collections) // AUTO-SAVE
     }
     
     @MainActor
@@ -380,6 +348,7 @@ class HomeViewModel: ObservableObject {
         } else {
             self.collections[index].requests.append(preset)
             showToast(message: "Request Added")
+            CollectionService.saveAuto(collections: collections) // AUTO-SAVE
         }
     }
     
@@ -396,12 +365,14 @@ class HomeViewModel: ObservableObject {
     func deleteRequestFromCollection(id: UUID) {
         guard let collectionIndex = selectedCollectionIndex else { return }
         collections[collectionIndex].requests.removeAll(where: { $0.id == id })
+        CollectionService.saveAuto(collections: collections) // AUTO-SAVE
     }
     
     @MainActor
     func deleteRequestFromCollection(at offsets: IndexSet) {
         guard let collectionIndex = selectedCollectionIndex else { return }
         collections[collectionIndex].requests.remove(atOffsets: offsets)
+        CollectionService.saveAuto(collections: collections) // AUTO-SAVE
     }
     
     // --- DOWNLOAD ACTION ---

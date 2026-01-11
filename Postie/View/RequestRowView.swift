@@ -10,7 +10,7 @@ import SwiftUI
 struct RequestRowView: View {
     let request: RequestPreset
     @ObservedObject var viewModel: HomeViewModel
-    @Environment(\.dismiss) var dismiss // Get dismiss from its own environment
+    var onLoadRequest: (() -> Void)? = nil // Optional closure untuk close collection view
 
     var body: some View {
         HStack {
@@ -26,7 +26,7 @@ struct RequestRowView: View {
             Spacer()
             Button(action: {
                 viewModel.loadRequestFromCollection(request: request)
-                dismiss() // Direct call to @Environment dismiss
+                onLoadRequest?() // Call closure untuk close collection view
             }) {
                 Image(systemName: "arrow.up.forward.app")
             }

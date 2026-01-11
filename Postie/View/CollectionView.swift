@@ -88,7 +88,9 @@ struct CollectionView: View {
                 } else {
                     List {
                         ForEach(selectedCollection.requests) { request in
-                            RequestRowView(request: request, viewModel: viewModel)
+                            RequestRowView(request: request, viewModel: viewModel, onLoadRequest: {
+                                dismiss() // Close collection view saat load request
+                            })
                         }
                         .onDelete(perform: viewModel.deleteRequestFromCollection)
                     }
