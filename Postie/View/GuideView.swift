@@ -19,7 +19,7 @@ struct GuideView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Interface Guide")
                             .font(.title2).bold()
-                        Text("Panduan lengkap setiap komponen input di Postie.")
+                        Text("Complete guide to every input component in Postie.")
                             .foregroundColor(.secondary)
                     }
                     
@@ -46,17 +46,17 @@ struct GuideView: View {
                 // ==========================================
                 // 1. TARGET SECTION (Method & URL)
                 // ==========================================
-                GuideSection(title: "1. TARGET (Tujuan)", icon: "network") {
+                GuideSection(title: "1. TARGET (Destination)", icon: "network") {
                     GuideRow(
                         icon: "arrow.triangle.2.circlepath",
                         title: "HTTP Method",
-                        desc: "Menentukan jenis aksi. Gunakan `GET` untuk mengambil data, `POST` untuk mengirim data baru, `PUT/PATCH` untuk update, dan `DELETE` untuk menghapus."
+                        desc: "Defines the action type. Use `GET` to fetch data, `POST` to send new data, `PUT/PATCH` to update, and `DELETE` to remove."
                     )
                     
                     GuideRow(
                         icon: "link",
                         title: "Target URL",
-                        desc: "Alamat server tujuan (Endpoint). Wajib menyertakan protokol `http://` atau `https://`."
+                        desc: "The server endpoint address. Must include the protocol `http://` or `https://`."
                     )
                 }
                 
@@ -67,24 +67,24 @@ struct GuideView: View {
                     GuideRow(
                         icon: "key.fill",
                         title: "Bearer Token (Shortcut)",
-                        desc: "Kolom khusus untuk autentikasi. Jika diisi, Postie otomatis membuat header `Authorization: Bearer <token_anda>`."
+                        desc: "Dedicated field for authentication. When filled, Postie automatically creates the header `Authorization: Bearer <your_token>`."
                     )
                     
                     GuideRow(
                         icon: "list.bullet.rectangle",
                         title: "Custom Headers",
-                        desc: "Metadata tambahan dalam format `Key: Value`. Gunakan baris baru untuk memisahkan header.\nContoh:\n`Content-Type: application/json`\n`X-Api-Key: 12345`"
+                        desc: "Additional metadata in `Key: Value` format. Use new lines to separate headers.\nExample:\n`Content-Type: application/json`\n`X-Api-Key: 12345`"
                     )
                 }
                 
                 // ==========================================
                 // 3. BODY SECTION (Payload)
                 // ==========================================
-                GuideSection(title: "3. BODY PAYLOAD (Isi Paket)", icon: "doc.text.fill") {
+                GuideSection(title: "3. BODY PAYLOAD (Request Data)", icon: "doc.text.fill") {
                     GuideRow(
                         icon: "curlybraces",
                         title: "JSON Editor",
-                        desc: "Area ini hanya aktif untuk method `POST`, `PUT`, atau `PATCH`. Pastikan format JSON valid (menggunakan tanda kutip ganda untuk key & string)."
+                        desc: "This field is only active for `POST`, `PUT`, or `PATCH` methods. Ensure valid JSON format (use double quotes for keys & strings)."
                     )
                     
                     // Tips Validasi JSON
@@ -92,7 +92,7 @@ struct GuideView: View {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .foregroundColor(.orange)
                             .font(.caption)
-                        Text("Tips: Jika server merespon 400 Bad Request, cek kembali tanda koma (,) di akhir JSON object anda.")
+                        Text("Tip: If the server responds with 400 Bad Request, check for trailing commas (,) in your JSON object.")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -102,21 +102,21 @@ struct GuideView: View {
                 }
                 
                 // ==========================================
-                // 4. LATENCY EVALUATOR (Warna Warni)
+                // 4. LATENCY EVALUATOR (Performance)
                 // ==========================================
-                GuideSection(title: "4. LATENCY INDICATOR (Kecepatan)", icon: "stopwatch.fill") {
-                    Text("Indikator warna pada respon menunjukkan kesehatan server:")
+                GuideSection(title: "4. LATENCY INDICATOR (Performance)", icon: "stopwatch.fill") {
+                    Text("Color indicators on responses show server health:")
                         .font(.caption).foregroundColor(.secondary)
                         .padding(.bottom, 4)
                     
                     VStack(alignment: .leading, spacing: 0) {
-                        LatencyRow(color: .green, label: "EXCELLENT (< 200ms)", desc: "Respon instan. User experience sangat baik.")
+                        LatencyRow(color: .green, label: "EXCELLENT (< 200ms)", desc: "Instant response. Excellent user experience.")
                         Divider()
-                        LatencyRow(color: Color(nsColor: .systemGreen), label: "GOOD (200-600ms)", desc: "Standar kecepatan API modern.")
+                        LatencyRow(color: Color(nsColor: .systemGreen), label: "GOOD (200-600ms)", desc: "Modern API standard speed.")
                         Divider()
-                        LatencyRow(color: .orange, label: "AVERAGE (600-1200ms)", desc: "Terasa ada jeda (loading). Perlu optimasi.")
+                        LatencyRow(color: .orange, label: "AVERAGE (600-1200ms)", desc: "Noticeable delay. Consider optimization.")
                         Divider()
-                        LatencyRow(color: .red, label: "SLOW (> 1200ms)", desc: "Sangat lambat. Berpotensi timeout.")
+                        LatencyRow(color: .red, label: "SLOW (> 1200ms)", desc: "Very slow. Potential timeout risk.")
                     }
                     .background(Color(NSColor.textBackgroundColor))
                     .cornerRadius(8)
@@ -126,17 +126,17 @@ struct GuideView: View {
                 // ==========================================
                 // NEW SECTION: PRESETS (Save & Load)
                 // ==========================================
-                GuideSection(title: "Presets (Simpan & Buka)", icon: "tray.full.fill") {
+                GuideSection(title: "Presets (Save & Load)", icon: "tray.full.fill") {
                     GuideRow(
                         icon: "square.and.arrow.down",
                         title: "Save Request",
-                        desc: "Simpan seluruh konfigurasi (Method, URL, Headers, dan Body) ke dalam file `.json`. Sangat berguna untuk mendokumentasikan API atau berbagi konfigurasi dengan tim."
+                        desc: "Save the entire configuration (Method, URL, Headers, and Body) to a `.json` file. Perfect for documenting APIs or sharing configurations with your team."
                     )
                     
                     GuideRow(
                         icon: "folder",
                         title: "Browse / Load Request",
-                        desc: "Membuka file preset yang sudah disimpan sebelumnya. Postie akan otomatis mengisi kembali semua kolom input sesuai dengan data di dalam file tersebut."
+                        desc: "Open a previously saved preset file. Postie will automatically populate all input fields with the data from the file."
                     )
                 }
                 

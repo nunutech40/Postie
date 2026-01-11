@@ -33,29 +33,29 @@ struct OnboardingView: View {
             TabView(selection: $selection) {
                 OnboardingSlideView(
                     imageName: "home-req",
-                    title: "Kirim Request dengan Mudah",
-                    description: "Interface yang bersih dan intuitif untuk mengirim HTTP request. Pilih method, masukkan URL, tambahkan headers dan body, lalu klik Send. Response langsung muncul dengan JSON yang sudah di-format otomatis."
+                    title: "Send Requests Effortlessly",
+                    description: "Clean, intuitive interface for sending HTTP requests. Choose your method, enter the URL, add headers and body, then hit Send. Responses appear instantly with beautifully formatted JSON."
                 )
                 .tag(0)
 
                 OnboardingSlideView(
                     imageName: "collection-request",
-                    title: "Organisir dengan Collections",
-                    description: "Kelompokkan request API kamu ke dalam collections. Mudah untuk manage, save, dan load kembali. Cocok untuk project dengan banyak endpoint yang perlu di-test secara berkala."
+                    title: "Organize with Collections",
+                    description: "Group your API requests into collections for better organization. Save, load, and manage multiple endpoints with ease. Perfect for projects with recurring API testing needs."
                 )
                 .tag(1)
 
                 OnboardingSlideView(
                     imageName: "historyreq",
-                    title: "Request History & Environment",
-                    description: "10 request terakhir otomatis tersimpan untuk akses cepat. Manage multiple environments (dev, staging, production) dengan variabel seperti {{baseURL}} dan {{apiKey}} untuk workflow yang lebih efisien."
+                    title: "History & Environments",
+                    description: "Your last 10 requests are automatically saved for quick access. Manage multiple environments (dev, staging, production) with variables like {{baseURL}} and {{apiKey}} for a seamless workflow."
                 )
                 .tag(2)
 
                 OnboardingSlideView(
                     imageName: "about-app",
-                    title: "Native, Ringan, dan Cepat",
-                    description: "Dibangun 100% native dengan SwiftUI & AppKit. Konsumsi RAM di bawah 50MB, tanpa Electron bloat. Instant start, zero dependencies, dan performa maksimal untuk testing API sehari-hari."
+                    title: "Native, Lightweight, Blazing Fast",
+                    description: "Built 100% native with SwiftUI & AppKit. Under 50MB RAM usage, no Electron bloat. Instant startup, zero dependencies, and maximum performance for your daily API testing."
                 )
                 .tag(3)
             }
@@ -99,7 +99,7 @@ struct OnboardingView: View {
                         }
                     }
                 }) {
-                    Text(selection == 3 ? (isFromSettings ? "Close" : "Mulai Pakai Postie") : "Next")
+                    Text(selection == 3 ? (isFromSettings ? "Close" : "Get Started") : "Next")
                         .fontWeight(.semibold)
                         .padding(.horizontal, 24)
                         .padding(.vertical, 10)
