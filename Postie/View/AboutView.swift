@@ -48,7 +48,7 @@ struct AboutView: View {
                         .multilineTextAlignment(.center)
                         .font(.body)
                     
-                    Text("Postie adalah API testing tool yang dibangun 100% native dengan SwiftUI & AppKit. Tanpa Electron, tanpa bloat, hanya performa murni di bawah 50MB RAM.")
+                    Text("Postie is an API testing tool built 100% native with SwiftUI & AppKit. No Electron, no bloat—just pure performance under 50MB RAM.")
                         .multilineTextAlignment(.center)
                         .font(.callout)
                         .foregroundStyle(.secondary)

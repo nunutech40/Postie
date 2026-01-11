@@ -86,6 +86,7 @@ Postie dirancang untuk developer yang:
 - **Latency Evaluator** — Indikator waktu response dengan warna (Excellent/Good/Average/Slow)
 
 ### 🛠️ **Developer Experience**
+- **Interactive Onboarding** — Tutorial visual 4-slide yang muncul saat first launch, bisa diakses ulang dari toolbar
 - **Error Dictionary** — Penjelasan ramah untuk HTTP status code
 - **Smart Error Mapping** — Error teknis diterjemahin jadi pesan yang actionable
 - **Keyboard Shortcuts** — `⌘F` search, `⌘C` copy, dan lainnya
@@ -166,6 +167,16 @@ Otomatis deteksi tipe file dan save dengan extension yang benar:
 
 ### **5. Request History** 🕐
 10 request terakhir disimpan otomatis. Request yang gagal dibedakan secara visual untuk debugging cepat.
+
+### **6. Interactive Onboarding** 🎓
+Tutorial visual 4-slide yang muncul otomatis saat first launch:
+- **Slide 1:** Pengenalan interface dan cara kirim request
+- **Slide 2:** Cara organisir request dengan Collections
+- **Slide 3:** Manfaat Request History dan Environment Management
+- **Slide 4:** Keunggulan native app (performa, RAM usage)
+
+Bisa diakses ulang kapan saja lewat tombol tutorial (▶️) di toolbar.
+
 
 ---
 

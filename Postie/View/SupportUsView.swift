@@ -23,23 +23,23 @@ struct SupportUsView: View {
                     .padding(.top, 20)
                 
                 // Title
-                Text("Dukung Developer Indie")
+                Text("Support Indie Development")
                     .font(.title2)
                     .bold()
                 
                 // Developer Story
                 VStack(spacing: 12) {
-                    Text("Hai, saya Nunu, developer tunggal di balik Postie.")
+                    Text("Hi, I'm Nunu, the solo developer behind Postie.")
                         .font(.subheadline)
                         .fontWeight(.semibold)
                         .multilineTextAlignment(.center)
                     
-                    Text("Aplikasi ini lahir dari frustrasi menggunakan API client yang berat dan lambat. Postie dibangun 100% native tanpa dependency pihak ketiga, dengan fokus pada performa dan efisiensi.")
+                    Text("This app was born from frustration with heavy, sluggish API clients. Postie is built 100% native with zero third-party dependencies, focusing purely on performance and efficiency.")
                         .multilineTextAlignment(.center)
                         .font(.callout)
                         .foregroundStyle(.secondary)
                     
-                    Text("Dukungan Anda sangat berarti untuk menjaga aplikasi ini tetap gratis, bebas iklan, dan terus berkembang. Setiap traktiran kopi memberi energi untuk terus berkarya! ☕️")
+                    Text("Your support means everything in keeping this app free, ad-free, and continuously improving. Every coffee fuels more features and refinements! ☕️")
                         .multilineTextAlignment(.center)
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -51,7 +51,7 @@ struct SupportUsView: View {
                     Link(destination: URL(string: "https://saweria.co/nunugraha17")!) {
                         HStack {
                             Image(systemName: "sparkles")
-                            Text("Traktir di Saweria")
+                            Text("Support on Saweria")
                         }
                         .font(.subheadline)
                         .fontWeight(.semibold)
@@ -67,7 +67,7 @@ struct SupportUsView: View {
                     Link(destination: URL(string: "https://www.buymeacoffee.com/nunutech401")!) {
                         HStack {
                             Image(systemName: "cup.and.saucer.fill")
-                            Text("Traktir di Buy Me a Coffee")
+                            Text("Buy Me a Coffee")
                         }
                         .font(.subheadline)
                         .fontWeight(.semibold)
@@ -88,11 +88,11 @@ struct SupportUsView: View {
                         .font(.title3)
                         .foregroundStyle(.pink)
                     
-                    Text("Terima kasih atas dukungannya!")
+                    Text("Thank you for your support!")
                         .font(.subheadline)
                         .fontWeight(.semibold)
                     
-                    Text("Every contribution helps keep Postie alive.")
+                    Text("Every contribution helps keep Postie alive and thriving.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
