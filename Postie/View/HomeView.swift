@@ -261,20 +261,6 @@ struct TargetSectionView: View {
                 
                 // Group Tombol dengan frame yang konsisten
                 HStack(spacing: 14) {
-                    // Clear URL Button
-                    if !viewModel.urlString.isEmpty {
-                        Button(action: { 
-                            viewModel.urlString = ""
-                        }) {
-                            Image(systemName: "xmark.circle.fill")
-                                .font(.system(size: 13, weight: .medium))
-                                .frame(width: 18, height: 18)
-                        }
-                        .buttonStyle(.plain)
-                        .foregroundColor(.secondary)
-                        .help("Clear URL")
-                    }
-                    
                     Button(action: { showHistory = true }) {
                         Image(systemName: "clock")
                             .font(.system(size: 13, weight: .medium))
@@ -313,14 +299,31 @@ struct TargetSectionView: View {
                     Spacer()
                 }
                 
-                NativeEditableTextView(text: $viewModel.urlString)
-                    .font(.system(.body, design: .monospaced))
-                    .autocorrectionDisabled(true)
-                    .frame(height: 50)
-                    .padding(4)
-                    .background(Color(NSColor.textBackgroundColor))
-                    .cornerRadius(6)
-                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.gray.opacity(0.2)))
+                // URL Input dengan Clear Button di dalam
+                ZStack(alignment: .topTrailing) {
+                    NativeEditableTextView(text: $viewModel.urlString)
+                        .font(.system(.body, design: .monospaced))
+                        .autocorrectionDisabled(true)
+                        .frame(height: 50)
+                        .padding(4)
+                        .background(Color(NSColor.textBackgroundColor))
+                        .cornerRadius(6)
+                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.gray.opacity(0.2)))
+                    
+                    // Clear button overlay
+                    if !viewModel.urlString.isEmpty {
+                        Button(action: { 
+                            viewModel.urlString = ""
+                        }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.secondary)
+                                .font(.system(size: 16))
+                        }
+                        .buttonStyle(.plain)
+                        .padding(8)
+                        .help("Clear URL")
+                    }
+                }
             }
         }
     }
@@ -331,22 +334,7 @@ struct HeadersSectionView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                SectionHeader(title: "HEADERS")
-                Spacer()
-                // Clear Headers Button
-                if !viewModel.rawHeaders.isEmpty {
-                    Button(action: { 
-                        viewModel.rawHeaders = ""
-                    }) {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 13, weight: .medium))
-                    }
-                    .buttonStyle(.plain)
-                    .foregroundColor(.secondary)
-                    .help("Clear Headers")
-                }
-            }
+            SectionHeader(title: "HEADERS")
             
             // Auth Shortcut
             HStack {
@@ -371,17 +359,34 @@ struct HeadersSectionView: View {
             .cornerRadius(6)
             .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.gray.opacity(0.2)))
             
-            // Raw Headers Input
+            // Raw Headers Input dengan Clear Button
             VStack(alignment: .leading, spacing: 4) {
                 Text("Custom Headers (Key: Value)").font(.caption2).foregroundColor(.secondary)
-                NativeEditableTextView(text: $viewModel.rawHeaders)
-                    .font(.system(.caption, design: .monospaced))
-                    .frame(height: 80)
-                    .autocorrectionDisabled(true)
-                    .padding(4)
-                    .background(Color(NSColor.textBackgroundColor))
-                    .cornerRadius(6)
-                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.gray.opacity(0.2)))
+                
+                ZStack(alignment: .topTrailing) {
+                    NativeEditableTextView(text: $viewModel.rawHeaders)
+                        .font(.system(.caption, design: .monospaced))
+                        .frame(height: 80)
+                        .autocorrectionDisabled(true)
+                        .padding(4)
+                        .background(Color(NSColor.textBackgroundColor))
+                        .cornerRadius(6)
+                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.gray.opacity(0.2)))
+                    
+                    // Clear button overlay
+                    if !viewModel.rawHeaders.isEmpty {
+                        Button(action: { 
+                            viewModel.rawHeaders = ""
+                        }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.secondary)
+                                .font(.system(size: 14))
+                        }
+                        .buttonStyle(.plain)
+                        .padding(6)
+                        .help("Clear Headers")
+                    }
+                }
             }
         }
     }
@@ -397,32 +402,35 @@ struct BodySectionView: View {
                 HStack {
                     SectionHeader(title: "BODY PAYLOAD")
                     Spacer()
+                    Text("JSON").font(.caption2).padding(.horizontal, 4)
+                        .background(Color.gray.opacity(0.2)).cornerRadius(4)
+                }
+                
+                // Body Input dengan Clear Button
+                ZStack(alignment: .topTrailing) {
+                    NativeEditableTextView(text: $viewModel.requestBody)
+                        .font(.system(size: 12, design: .monospaced))
+                        .frame(height: 200)
+                        .autocorrectionDisabled(true)
+                        .padding(4)
+                        .background(Color(NSColor.textBackgroundColor))
+                        .cornerRadius(6)
+                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.gray.opacity(0.2)))
                     
-                    // Clear Body Button
+                    // Clear button overlay
                     if !viewModel.requestBody.isEmpty {
                         Button(action: { 
                             viewModel.requestBody = ""
                         }) {
                             Image(systemName: "xmark.circle.fill")
-                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(.secondary)
+                                .font(.system(size: 14))
                         }
                         .buttonStyle(.plain)
-                        .foregroundColor(.secondary)
+                        .padding(6)
                         .help("Clear Body")
                     }
-                    
-                    Text("JSON").font(.caption2).padding(.horizontal, 4)
-                        .background(Color.gray.opacity(0.2)).cornerRadius(4)
                 }
-                
-                NativeEditableTextView(text: $viewModel.requestBody)
-                    .font(.system(size: 12, design: .monospaced))
-                    .frame(height: 200)
-                    .autocorrectionDisabled(true)
-                    .padding(4)
-                    .background(Color(NSColor.textBackgroundColor))
-                    .cornerRadius(6)
-                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.gray.opacity(0.2)))
             }
         } else {
             EmptyView()
